@@ -12,7 +12,7 @@
   const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
   const EVENT_DAYS = [
     { day: 1, date: "2026-11-18", start: "2026-11-18T13:00:00+08:00", end: "2026-11-18T17:00:00+08:00", where: "on Zoom" },
-    { day: 2, date: "2026-11-25", start: "2026-11-25T13:00:00+08:00", end: "2026-11-25T17:00:00+08:00", where: "at the 5th Floor STEER Hub" }
+    { day: 2, date: "2026-11-25", start: "2026-11-25T13:00:00+08:00", end: "2026-11-25T17:00:00+08:00", where: "at the Leonardo da Vinci Amphitheater" }
   ];
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
