@@ -1,0 +1,13 @@
+{
+  "name": "tiered-systems-opportunity-board",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && cp -R data dist/data"
+  },
+  "devDependencies": {
+    "vite": "^6.1.0"
+  }
+}

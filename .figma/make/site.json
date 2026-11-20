@@ -1,0 +1,10 @@
+{
+  "description": "An imported-project setup workspace that bootstraps applications and verifies deployment readiness, helping teams prepare reliable production and preview releases.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
