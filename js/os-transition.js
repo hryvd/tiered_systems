@@ -8,7 +8,7 @@
  */
 
 const LAUNCH_STORAGE_KEY = "ts_os_launch_morph";
-const NAVIGATE_DELAY_MS = 540;
+const NAVIGATE_DELAY_MS = 720;
 
 let isLaunching = false;
 

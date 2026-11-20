@@ -1317,7 +1317,17 @@ function initMobileSheetGestures() {
   });
 }
 
-async function initLaunchArrival(readyPromise) {
+function waitForActiveTiles() {
+  if (!activeTileLayers.length) return Promise.resolve();
+  return Promise.all(
+    activeTileLayers.map(layer => {
+      if (!layer || !layer._loading) return Promise.resolve();
+      return new Promise(resolve => layer.once("load", resolve));
+    })
+  );
+}
+
+async function initLaunchArrival(tilesReady, dirReady) {
   const root = document.documentElement;
   if (!root.classList.contains("os-launch-entering")) return;
   try {
@@ -1327,10 +1337,17 @@ async function initLaunchArrival(readyPromise) {
   const windowLoaded = document.readyState === "complete"
     ? Promise.resolve()
     : new Promise(resolve => window.addEventListener("load", resolve, { once: true }));
+  const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
 
-  const maxWait = new Promise(resolve => window.setTimeout(resolve, 1800));
-  await Promise.race([Promise.all([windowLoaded, readyPromise]), maxWait]);
-  await new Promise(resolve => window.setTimeout(resolve, 140));
+  const fullLoadReady = (async () => {
+    await Promise.all([windowLoaded, fontsReady, tilesReady, dirReady]);
+    await new Promise(resolve => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+    await waitForActiveTiles();
+  })();
+
+  const maxWait = new Promise(resolve => window.setTimeout(resolve, 3500));
+  await Promise.race([fullLoadReady, maxWait]);
+  await new Promise(resolve => window.setTimeout(resolve, 160));
 
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
@@ -1338,7 +1355,7 @@ async function initLaunchArrival(readyPromise) {
       root.classList.add("os-launch-settling");
       window.setTimeout(() => {
         root.classList.remove("os-launch-settling");
-      }, 2150);
+      }, 2450);
     });
   });
 }
@@ -1354,7 +1371,7 @@ document.addEventListener("DOMContentLoaded", () => {
   syncHudAttributes();
   initMobileSheetGestures();
   const dirReady = loadDirectory();
-  initLaunchArrival(Promise.all([tilesReady, dirReady]));
+  initLaunchArrival(tilesReady, dirReady);
 
   /* Search & Category Pills */
   const searchInput = document.getElementById("os-search-input");

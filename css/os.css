@@ -1085,16 +1085,16 @@ html.os-launch-entering .os-search-pill::after {
 
 html.os-launch-settling .os-search-pill::before {
   opacity: 0;
-  transition: opacity 1350ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 1250ms cubic-bezier(0.22, 1, 0.36, 1) 420ms;
 }
 
 html.os-launch-settling .os-search-pill::after {
   animation: none;
   opacity: 0;
-  transform: scale(1.10);
+  transform: scale(1.12);
   transition:
-    opacity 1550ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 1550ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 900ms cubic-bezier(0.22, 1, 0.36, 1) 0ms,
+    transform 950ms cubic-bezier(0.22, 1, 0.36, 1) 0ms;
 }
 
 html.os-launch-entering #opportunity-map {
@@ -1112,31 +1112,31 @@ html.os-launch-entering .os-mobile-dock {
 
 html.os-launch-settling #opportunity-map {
   opacity: 1;
-  transition: opacity 1450ms cubic-bezier(0.22, 1, 0.36, 1) 120ms;
+  transition: opacity 1400ms cubic-bezier(0.22, 1, 0.36, 1) 560ms;
 }
 
 html.os-launch-settling .os-cat-row {
   opacity: 1;
   transform: none;
   transition:
-    opacity 1050ms cubic-bezier(0.22, 1, 0.36, 1) 240ms,
-    transform 1150ms var(--ease-spring) 240ms;
+    opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1) 720ms,
+    transform 1100ms var(--ease-spring) 720ms;
 }
 
 html.os-launch-settling .os-nav-rail {
   opacity: 1;
   transform: none;
   transition:
-    opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1) 360ms,
-    transform 1200ms var(--ease-spring) 360ms;
+    opacity 1050ms cubic-bezier(0.22, 1, 0.36, 1) 840ms,
+    transform 1150ms var(--ease-spring) 840ms;
 }
 
 html.os-launch-settling .os-inspector {
   opacity: 1;
   transform: none;
   transition:
-    opacity 1150ms cubic-bezier(0.22, 1, 0.36, 1) 420ms,
-    transform 1250ms var(--ease-spring) 420ms;
+    opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1) 900ms,
+    transform 1200ms var(--ease-spring) 900ms;
 }
 
 html.os-launch-settling .os-bottom-left,
@@ -1144,8 +1144,8 @@ html.os-launch-settling .os-mobile-dock {
   opacity: 1;
   transform: none;
   transition:
-    opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1) 520ms,
-    transform 1200ms var(--ease-spring) 520ms;
+    opacity 1050ms cubic-bezier(0.22, 1, 0.36, 1) 980ms,
+    transform 1150ms var(--ease-spring) 980ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
