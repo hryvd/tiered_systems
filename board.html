@@ -4,362 +4,57 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tiered Systems • Opportunity OS</title>
-  <meta name="description" content="Interactive directory and radar map of verified Memorandum of Agreement (MOA) industry partner companies for BatStateU Alangilan engineering and computing students." />
-  <meta property="og:title" content="TIERED SYSTEM • MOA Opportunity Board" />
-  <meta property="og:description" content="Explore verified MOA industry partners across Batangas, Calabarzon, and Metro Manila. Filter by engineering discipline, internship setup, and campus distance." />
-  <meta property="og:type" content="website" />
-  <meta name="theme-color" content="#0b120c" />
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <!-- Google Fonts: Inter & Geist Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-
-  <!-- Tokenized Design System Stylesheet -->
-  <link rel="stylesheet" href="./css/styles.css" />
+  <meta http-equiv="refresh" content="0; url=./index.html" />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: radial-gradient(circle at 70% 10%, rgba(233, 200, 123, 0.14), transparent 45%), #091009;
+      color: #faf8f2;
+    }
+    .redirect-card {
+      max-width: 420px;
+      width: 100%;
+      padding: 28px;
+      border-radius: 26px;
+      text-align: center;
+      background: linear-gradient(155deg, rgba(48, 43, 28, 0.64) 0%, rgba(16, 23, 16, 0.78) 60%, rgba(28, 25, 16, 0.72) 100%);
+      backdrop-filter: blur(26px) saturate(155%);
+      -webkit-backdrop-filter: blur(26px) saturate(155%);
+      border: 1px solid rgba(246, 228, 178, 0.24);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 248, 224, 0.34);
+    }
+    h1 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+    p { font-size: 0.9rem; color: #dcdbd0; margin-bottom: 20px; line-height: 1.5; }
+    a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 22px;
+      border-radius: 999px;
+      background: #faf7ee;
+      color: #161b14;
+      font-weight: 700;
+      font-size: 0.875rem;
+      text-decoration: none;
+    }
+    a:hover { background: #e9c87b; }
+  </style>
+  <script>
+    window.location.replace("./index.html" + window.location.search + window.location.hash);
+  </script>
 </head>
 <body>
-
-  <!-- Ambient Golden-Orange Volumetric Glow -->
-  <div class="ambient-radial-glow" aria-hidden="true"></div>
-
-  <!-- Non-blocking Status / Offline / Sync Recovery Banner -->
-  <div class="status-banner" id="status-banner" role="status" aria-live="polite">
-    <span id="status-banner-text">Status active</span>
-    <button type="button" class="btn-ts" style="min-height:28px; padding:3px 10px;" onclick="document.getElementById('status-banner').classList.remove('visible')">
-      Dismiss
-    </button>
-  </div>
-
-  <!-- Top Navigation Header -->
-  <header class="top-navbar">
-    <a href="./index.html" class="brand-group" style="text-decoration:none;" aria-label="Back to Tiered Systems home">
-      <!-- 3D Tiered System Emblem -->
-      <div class="brand-emblem-wrap" aria-hidden="true">
-        <svg class="brand-emblem-svg" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="9" stroke="var(--brand-primary)" stroke-width="1.8" />
-          <ellipse cx="12" cy="12" rx="9" ry="4" stroke="var(--brand-primary)" stroke-width="1.8" />
-          <ellipse cx="12" cy="12" rx="4" ry="9" stroke="var(--brand-primary)" stroke-width="1.8" />
-          <polygon points="12,5 15,12 12,19 9,12" fill="var(--brand-primary)" fill-opacity="0.25" stroke="var(--brand-primary)" stroke-width="1.4" />
-        </svg>
-      </div>
-
-      <div class="brand-text-block">
-        <h1>
-          T I E R E D &nbsp; S Y S T E M
-          <span class="pill-accent">OPPORTUNITY OS</span>
-        </h1>
-        <p>Verified industry pathways • BatStateU Alangilan</p>
-      </div>
-    </a>
-
-    <nav class="header-actions" aria-label="Directory controls">
-      <div class="metric-badge hide-mobile" title="Total available internship slots matching filters">
-        <span class="pulsing-dot" aria-hidden="true"></span>
-        <span id="active-slots-count">Open Slots: --</span>
-      </div>
-
-      <div class="metric-badge green hide-mobile">
-        <span>✓ 100% MOA Verified</span>
-      </div>
-
-      <button type="button" class="btn-ts" id="btn-open-sync-modal" title="Connect Google Sheets CSV or manage local database">
-        Data source
-      </button>
-
-      <button type="button" class="btn-ts" id="btn-export-csv" title="Download filtered directory as CSV">
-        Export
-      </button>
-
-      <button type="button" class="btn-ts primary" id="btn-open-add-modal">
-        Add partner
-      </button>
-    </nav>
-  </header>
-
-  <!-- Main Split Workspace -->
-  <main class="app-workspace" data-mobile-view="list">
-
-    <!-- Left Directory Sidebar -->
-    <aside class="sidebar" aria-label="Partner company directory filters and list">
-      <div class="filter-panel">
-        <!-- Persistent Visible Label for Search -->
-        <div class="search-field-group">
-          <label class="control-label" for="search-input">
-            <span>Search Partner Directory</span>
-            <span style="color:var(--brand-primary);">16+ Verified MOAs</span>
-          </label>
-          <div class="search-wrapper">
-            <span class="search-icon" aria-hidden="true"></span>
-            <input
-              type="text"
-              id="search-input"
-              class="search-input"
-              placeholder="Company name, city, tech stack, or MOA ref..."
-            />
-            <button type="button" id="search-clear-btn" class="search-clear-btn" aria-label="Clear search query">&times;</button>
-          </div>
-        </div>
-
-        <!-- 3-Column Filter Grid: Program, Opportunity Type, Campus Origin -->
-        <div class="filter-grid-3">
-          <div>
-            <label class="control-label" for="filter-program">Program</label>
-            <select id="filter-program" class="filter-select">
-              <option value="all">All Programs</option>
-              <option value="CpE">CpE (Comp Eng)</option>
-              <option value="ECE">ECE (Electronics)</option>
-              <option value="EE">EE (Electrical)</option>
-              <option value="ME">ME (Mechanical)</option>
-              <option value="IE">IE (Industrial)</option>
-              <option value="CS">CS (Comp Sci)</option>
-              <option value="IT">IT (Info Tech)</option>
-              <option value="ChE">ChE (Chemical)</option>
-              <option value="CE">CE (Civil)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="control-label" for="filter-accepts">Accepts</label>
-            <select id="filter-accepts" class="filter-select">
-              <option value="all">All Tracks</option>
-              <option value="OJT / Internship">OJT / Internship</option>
-              <option value="Fresh Grad Hiring">Fresh Grad Hiring</option>
-              <option value="Capstone / Industry Project">Capstone Project</option>
-              <option value="Plant Visit / Immersion">Plant Immersion</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="control-label" for="filter-campus">Campus Node</label>
-            <select id="filter-campus" class="filter-select">
-              <option value="alangilan">Alangilan</option>
-              <option value="pabloBorbon">Pablo Borbon</option>
-              <option value="malvar">Malvar</option>
-              <option value="lipa">Lipa</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Distance Radius Slider -->
-        <div class="distance-slider-box">
-          <div class="slider-header">
-            <label for="radius-slider">Max Distance from Campus:</label>
-            <span class="slider-badge" id="slider-val-label">All (No Limit)</span>
-          </div>
-          <input
-            type="range"
-            id="radius-slider"
-            class="range-input"
-            min="10"
-            max="120"
-            step="5"
-            value="120"
-          />
-        </div>
-
-        <!-- Quick Sector & Bookmark Filter Chips -->
-        <div class="quick-chips-wrapper" role="group" aria-label="Quick category filters">
-          <button type="button" class="chip-btn active" data-filter="all">All Partners</button>
-          <button type="button" class="chip-btn" data-filter="Saved" id="saved-count-chip">Saved (0)</button>
-          <button type="button" class="chip-btn" data-filter="Paid Allowance">Paid allowance</button>
-          <button type="button" class="chip-btn" data-filter="Semiconductor">Semiconductor</button>
-          <button type="button" class="chip-btn" data-filter="Software/AI">Software / AI</button>
-          <button type="button" class="chip-btn" data-filter="Energy">Clean energy</button>
-          <button type="button" class="chip-btn" data-filter="Manufacturing">Robotics & Mfg</button>
-        </div>
-      </div>
-
-      <!-- Results Stats & Sorter -->
-      <div class="results-count-bar">
-        <span id="results-count-text" aria-live="polite">Loading directory...</span>
-
-        <div class="sort-control">
-          <label for="sort-order">Sort:</label>
-          <select id="sort-order" class="sort-select">
-            <option value="nearest">Nearest to Campus</option>
-            <option value="slots">Most Open Slots</option>
-            <option value="name">Alphabetical (A–Z)</option>
-          </select>
-          <button type="button" id="btn-reset-filters" class="reset-btn" style="display: none;">Reset</button>
-        </div>
-      </div>
-
-      <!-- Scrollable Company Cards -->
-      <div class="companies-list" id="companies-container"></div>
-    </aside>
-
-    <!-- Right Interactive Radar Map -->
-    <section class="map-container-pane" aria-label="Interactive partner location map">
-      <div id="opportunity-map"></div>
-
-      <!-- Floating Basemap Switcher & Quick Jumps -->
-      <div class="map-floating-bar" role="toolbar" aria-label="Map style and camera controls">
-        <button type="button" class="basemap-btn" data-style="dark">Dark</button>
-        <button type="button" class="basemap-btn" data-style="street">Street</button>
-        <button type="button" class="basemap-btn active" data-style="satellite">Satellite</button>
-        <div style="width: 1px; background: var(--border-subtle); margin: 2px;"></div>
-        <button type="button" class="basemap-btn" id="btn-jump-campus">Campus</button>
-        <button type="button" class="basemap-btn" id="btn-fit-bounds">Fit all</button>
-      </div>
-
-      <!-- Map Legend -->
-      <div class="map-legend" aria-hidden="true">
-        <div class="legend-row">
-          <span style="display:inline-block; width:10px; height:10px; background:var(--brand-primary); border-radius:50%; box-shadow:0 0 6px var(--brand-primary);"></span>
-          <span>Verified MOA Partner</span>
-        </div>
-        <div class="legend-row">
-          <span style="display:inline-block; width:10px; height:10px; background:#ffffff; border-radius:2px; border:1px solid var(--brand-primary);"></span>
-          <span>BatStateU Campus Node</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Mobile Floating View Switcher (360px - 860px) -->
-    <div class="mobile-view-switcher" role="tablist" aria-label="Switch between directory list and map">
-      <button type="button" class="mobile-tab-btn active" data-view="list">Directory</button>
-      <button type="button" class="mobile-tab-btn" data-view="map">Map</button>
-    </div>
-
+  <main class="redirect-card">
+    <h1>Opening Tiered Systems Opportunity OS…</h1>
+    <p>The live MOA radar map now lives directly on the main page.</p>
+    <a href="./index.html">Continue to Opportunity OS &rarr;</a>
   </main>
-
-  <!-- Modal 1: Company MOA Details -->
-  <div class="modal-overlay" id="company-modal" role="dialog" aria-modal="true" aria-labelledby="modal-company-title">
-    <div class="modal-card">
-      <button type="button" class="modal-close-btn" id="btn-modal-close" aria-label="Close details modal">&times;</button>
-      <div id="modal-content"></div>
-    </div>
-  </div>
-
-  <!-- Modal 2: Add New MOA Partner -->
-  <div class="modal-overlay" id="add-company-modal" role="dialog" aria-modal="true" aria-labelledby="add-modal-title">
-    <div class="modal-card">
-      <button type="button" class="modal-close-btn" id="btn-add-modal-close" aria-label="Close add partner modal">&times;</button>
-      <h2 id="add-modal-title" style="font-size:var(--text-lg); font-weight:800; margin-bottom:4px; color:#ffffff;">Add Verified MOA Partner</h2>
-      <p style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:1.1rem;">
-        Pin a new partner company onto the Opportunity Board. Saved automatically in your browser and included in CSV exports.
-      </p>
-
-      <form id="form-add-company">
-        <div class="form-group">
-          <label for="new-name">Company Name *</label>
-          <input type="text" id="new-name" class="form-control" placeholder="e.g. Texas Instruments Philippines" required />
-        </div>
-
-        <div class="filter-grid-3 form-group">
-          <div>
-            <label for="new-category">Industry Sector *</label>
-            <select id="new-category" class="form-control">
-              <option value="Semiconductor">Semiconductor</option>
-              <option value="Software/AI">Software / AI</option>
-              <option value="Energy">Clean Energy</option>
-              <option value="Manufacturing">Manufacturing</option>
-              <option value="Telecom">Telecom</option>
-            </select>
-          </div>
-          <div>
-            <label for="new-setup">Work Setup</label>
-            <select id="new-setup" class="form-control">
-              <option value="On-Site">On-Site</option>
-              <option value="Hybrid">Hybrid</option>
-              <option value="Remote Friendly">Remote Friendly</option>
-            </select>
-          </div>
-          <div>
-            <label for="new-slots">Open Slots *</label>
-            <input type="number" id="new-slots" class="form-control" value="10" min="0" required />
-          </div>
-        </div>
-
-        <div class="filter-grid-3 form-group" style="grid-template-columns: 1fr 1fr;">
-          <div>
-            <label for="new-lat">Latitude *</label>
-            <input type="number" step="0.0001" id="new-lat" class="form-control" placeholder="13.9412" required />
-          </div>
-          <div>
-            <label for="new-lng">Longitude *</label>
-            <input type="number" step="0.0001" id="new-lng" class="form-control" placeholder="121.1634" required />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="new-address">Full Address / Industrial Park *</label>
-          <input type="text" id="new-address" class="form-control" placeholder="e.g. Lima Technology Center, Lipa City, Batangas" required />
-        </div>
-
-        <div class="filter-grid-3 form-group" style="grid-template-columns: 1fr 1fr;">
-          <div>
-            <label for="new-allowance">Stipend / Allowance</label>
-            <select id="new-allowance" class="form-control">
-              <option value="true">Paid Allowance Provided</option>
-              <option value="false">Standard OJT Immersion</option>
-            </select>
-          </div>
-          <div>
-            <label for="new-programs">Accepted Programs (comma-separated)</label>
-            <input type="text" id="new-programs" class="form-control" value="CpE, ECE, EE, CS" required />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="new-desc">Brief Overview & Roles</label>
-          <input type="text" id="new-desc" class="form-control" placeholder="Brief summary of internship tracks offered..." />
-        </div>
-
-        <div style="display:flex; gap:10px; margin-top:1.2rem;">
-          <button type="submit" class="btn-ts primary" style="flex:1;">Save & Pin to Radar</button>
-          <button type="button" id="btn-cancel-add" class="btn-ts">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal 3: Database & Google Sheets Live Sync Configuration -->
-  <div class="modal-overlay" id="sync-modal" role="dialog" aria-modal="true" aria-labelledby="sync-modal-title">
-    <div class="modal-card">
-      <button type="button" class="modal-close-btn" id="btn-sync-modal-close" aria-label="Close database sync modal">&times;</button>
-      <h2 id="sync-modal-title" style="font-size:var(--text-lg); font-weight:800; margin-bottom:4px; color:#ffffff;">Database & Google Sheets Live Sync</h2>
-      <p style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:1rem; line-height:1.5;">
-        By default, this website loads from <code>data/companies.json</code>. You can also connect a live <strong>Google Sheet</strong> so officers can update companies anytime without editing code.
-      </p>
-
-      <div style="background:rgba(255,107,0,0.08); border:1px solid var(--brand-border); border-radius:var(--radius-sm); padding:12px; margin-bottom:1rem; font-size:var(--text-xs); color:var(--text-secondary); line-height:1.55;">
-        <strong style="color:var(--brand-primary); display:block; margin-bottom:4px;">How to connect a Google Sheet in 30 seconds:</strong>
-        1. Import <code>data/moa_companies_template.csv</code> into Google Sheets.<br />
-        2. In Google Sheets, click <strong>File &rarr; Share &rarr; Publish to web</strong>.<br />
-        3. Choose <strong>Comma-separated values (.csv)</strong> and paste the link below.
-      </div>
-
-      <form id="form-sync-sheet">
-        <div class="form-group">
-          <label for="sheet-csv-url-input">Published Google Sheet CSV URL (Optional)</label>
-          <input
-            type="url"
-            id="sheet-csv-url-input"
-            class="form-control"
-            placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
-          />
-        </div>
-
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:1.2rem;">
-          <button type="submit" class="btn-ts primary" style="flex:1;">Save & Sync Database</button>
-          <a href="./data/moa_companies_template.csv" download class="btn-ts" style="text-decoration:none;">
-            Download template
-          </a>
-          <button type="button" id="btn-clear-custom-data" class="btn-ts" style="color:var(--status-danger); border-color:rgba(248,113,113,0.35);">
-            Reset Local Cache
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Scripts -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="./js/database.js"></script>
-  <script type="module" src="./js/app.js"></script>
 </body>
 </html>

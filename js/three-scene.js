@@ -32,44 +32,44 @@
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
   scene.add(ambientLight);
 
-  // Radiant Solar Orange Core Light
-  const coreLight = new THREE.PointLight(0xff6b00, 3.8, 14, 1.2);
+  // Radiant Champagne-Gold Core Light
+  const coreLight = new THREE.PointLight(0xe9c87b, 3.6, 14, 1.2);
   coreLight.position.set(0, 0.2, 0);
   masterGroup.add(coreLight);
 
   // Key light for crisp metallic specular highlights
-  const keyLight = new THREE.DirectionalLight(0xfff3e6, 2.4);
+  const keyLight = new THREE.DirectionalLight(0xfff8e6, 2.4);
   keyLight.position.set(6, 6, 7);
   scene.add(keyLight);
 
   // Rim back-light for edge separation
-  const rimLight = new THREE.DirectionalLight(0xff7700, 3.2);
+  const rimLight = new THREE.DirectionalLight(0xc99a3e, 3.0);
   rimLight.position.set(-6, -4, -4);
   scene.add(rimLight);
 
   // Materials
-  // 1. Brushed Golden-Bronze Metallic (Official Tiered System Emblem)
+  // 1. Brushed Champagne-Gold Metallic (Official Tiered System Emblem)
   const bronzeEmblemMat = new THREE.MeshStandardMaterial({
-    color: 0xdf8428,
+    color: 0xe9c87b,
     metalness: 0.94,
-    roughness: 0.22,
+    roughness: 0.2,
     envMapIntensity: 1.6
   });
 
-  // 2. Obsidian Beveled Chassis Material (Background Squircles)
+  // 2. Olive-Obsidian Beveled Chassis Material (Background Squircles)
   const chassisTileMat = new THREE.MeshStandardMaterial({
-    color: 0x0f1118,
-    metalness: 0.88,
-    roughness: 0.42
+    color: 0x162216,
+    metalness: 0.85,
+    roughness: 0.4
   });
 
   // 3. Glowing Core Sphere Material
   const coreGlowMat = new THREE.MeshStandardMaterial({
-    color: 0xff6b00,
-    emissive: 0xff4800,
-    emissiveIntensity: 0.75,
-    metalness: 0.7,
-    roughness: 0.3
+    color: 0xe9c87b,
+    emissive: 0xc99a3e,
+    emissiveIntensity: 0.72,
+    metalness: 0.72,
+    roughness: 0.28
   });
 
   // --- 1. Background Matrix of Squircle Chassis Tiles (From CURSOR Poster) ---
@@ -165,7 +165,7 @@
     // Dark metallic disc platform
     const discGeo = new THREE.CylinderGeometry(cfg.radius, cfg.radius * 1.04, 0.06, 48);
     const discMat = new THREE.MeshStandardMaterial({
-      color: 0x141620,
+      color: 0x162216,
       metalness: 0.9,
       roughness: 0.4
     });
@@ -175,7 +175,7 @@
     // Glowing perimeter circuit rim
     const rimGeo = new THREE.TorusGeometry(cfg.radius * 1.02, 0.035, 16, 64);
     const rimMat = new THREE.MeshStandardMaterial({
-      color: 0x444b60,
+      color: 0x3b4936,
       emissive: 0x000000,
       emissiveIntensity: 0,
       metalness: 0.8,
@@ -211,7 +211,7 @@
   }
   particleGeo.setAttribute("position", new THREE.BufferAttribute(particlePos, 3));
   const particleMat = new THREE.PointsMaterial({
-    color: 0xffaa44,
+    color: 0xf5da93,
     size: 0.05,
     transparent: true,
     opacity: 0.65
@@ -293,22 +293,22 @@
     tierPlatforms.forEach((p) => {
       const match = p.tier === tierNum;
       if (match) {
-        // Bright Solar Orange glow on active tier rim
-        p.rimMesh.material.color.setHex(0xff6b00);
-        p.rimMesh.material.emissive.setHex(0xff6b00);
-        p.rimMesh.material.emissiveIntensity = 1.4;
-        p.discMesh.material.color.setHex(0x242838);
+        // Bright Champagne Gold glow on active tier rim
+        p.rimMesh.material.color.setHex(0xe9c87b);
+        p.rimMesh.material.emissive.setHex(0xc99a3e);
+        p.rimMesh.material.emissiveIntensity = 1.35;
+        p.discMesh.material.color.setHex(0x283825);
         p.targetY = p.baseY + 0.14; // Slightly elevate active tier platform
 
         if (indicatorEl) {
           indicatorEl.textContent = p.label;
         }
       } else {
-        // Inactive tiers stay subtle dark metallic
-        p.rimMesh.material.color.setHex(0x363a4d);
+        // Inactive tiers stay subtle olive metallic
+        p.rimMesh.material.color.setHex(0x364633);
         p.rimMesh.material.emissive.setHex(0x000000);
         p.rimMesh.material.emissiveIntensity = 0;
-        p.discMesh.material.color.setHex(0x141620);
+        p.discMesh.material.color.setHex(0x162216);
         p.targetY = p.baseY;
       }
     });

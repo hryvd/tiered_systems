@@ -11,7 +11,22 @@ const STORAGE_KEYS = {
   CUSTOM_COMPANIES: "ts_moa_custom_companies_v1",
   BOOKMARKS: "ts_moa_saved_bookmarks_v1",
   SHEET_CSV_URL: "ts_moa_google_sheet_csv_url_v1",
-  CACHED_SHEET_DATA: "ts_moa_cached_sheet_data_v1"
+  CACHED_SHEET_DATA: "ts_moa_cached_sheet_data_v1",
+  STUDENT_PROFILE: "ts_moa_student_profile_v1",
+  OS_PREFS: "ts_moa_os_prefs_v1"
+};
+
+const DEFAULT_PROFILE = {
+  name: "",
+  program: "CpE",
+  campus: "alangilan",
+  workSetup: "all",
+  tiersCompleted: [1]
+};
+
+const DEFAULT_PREFS = {
+  basemap: "satellite",
+  showRadius: true
 };
 
 const CAMPUSES = {
@@ -738,9 +753,52 @@ const DatabaseService = {
     } else {
       localStorage.setItem(STORAGE_KEYS.SHEET_CSV_URL, url.trim());
     }
+  },
+
+  getProfile() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.STUDENT_PROFILE);
+      if (!raw) return { ...DEFAULT_PROFILE, tiersCompleted: [...DEFAULT_PROFILE.tiersCompleted] };
+      const parsed = JSON.parse(raw);
+      return {
+        ...DEFAULT_PROFILE,
+        ...parsed,
+        tiersCompleted: Array.isArray(parsed.tiersCompleted) ? parsed.tiersCompleted : [...DEFAULT_PROFILE.tiersCompleted]
+      };
+    } catch (_) {
+      return { ...DEFAULT_PROFILE, tiersCompleted: [...DEFAULT_PROFILE.tiersCompleted] };
+    }
+  },
+
+  saveProfile(profile) {
+    const merged = {
+      ...DEFAULT_PROFILE,
+      ...profile,
+      tiersCompleted: Array.isArray(profile?.tiersCompleted) ? profile.tiersCompleted : [...DEFAULT_PROFILE.tiersCompleted]
+    };
+    localStorage.setItem(STORAGE_KEYS.STUDENT_PROFILE, JSON.stringify(merged));
+    return merged;
+  },
+
+  getPrefs() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.OS_PREFS);
+      if (!raw) return { ...DEFAULT_PREFS };
+      return { ...DEFAULT_PREFS, ...JSON.parse(raw) };
+    } catch (_) {
+      return { ...DEFAULT_PREFS };
+    }
+  },
+
+  savePrefs(prefs) {
+    const merged = { ...DEFAULT_PREFS, ...prefs };
+    localStorage.setItem(STORAGE_KEYS.OS_PREFS, JSON.stringify(merged));
+    return merged;
   }
 };
 
 window.CAMPUSES = CAMPUSES;
 window.DatabaseService = DatabaseService;
 window.DEFAULT_MOA_COMPANIES = DEFAULT_MOA_COMPANIES;
+
+export { CAMPUSES, DatabaseService, DEFAULT_MOA_COMPANIES };

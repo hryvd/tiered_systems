@@ -6,6 +6,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         home: resolve(import.meta.dirname, "index.html"),
+        program: resolve(import.meta.dirname, "program.html"),
         board: resolve(import.meta.dirname, "board.html")
       }
     }

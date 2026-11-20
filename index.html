@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tiered Systems: Engineering Your Next Level · CURSOR BatStateU</title>
-  <meta name="description" content="A two-day career readiness program for Computer Engineering students at BatStateU Alangilan. Four tiers: Prepare, Level Up, Discover, Connect. November 18–19, 2026." />
-  <meta property="og:title" content="Tiered Systems: Engineering Your Next Level" />
-  <meta property="og:description" content="Resume and portfolio workshops, an industry plenary, an alumni panel, and an interactive 3D map of MOA partner companies. Nov 18–19, 2026." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Tiered Systems • Opportunity OS</title>
+  <meta name="description" content="Interactive satellite radar map and liquid-glass Opportunity OS of verified Memorandum of Agreement (MOA) industry partner companies for BatStateU Alangilan." />
+  <meta property="og:title" content="Tiered Systems • Opportunity OS" />
+  <meta property="og:description" content="Explore verified MOA industry partners across Batangas, Calabarzon, and Metro Manila on a live liquid-glass satellite map." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#0b120c" />
 
@@ -15,478 +15,319 @@
   <!-- Google Fonts: Inter & Geist Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./css/landing.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Opportunity OS Liquid Glass Stylesheet -->
+  <link rel="stylesheet" href="./css/os.css" />
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#os-search-input">Skip to partner search</a>
 
-  <!-- Ambient Golden-Orange Volumetric Glow -->
-  <div class="ambient-radial-glow" aria-hidden="true"></div>
+  <!-- Full-Bleed Live Map Canvas -->
+  <div id="opportunity-map" role="region" aria-label="Interactive satellite map of verified MOA partner companies"></div>
+  <div class="map-vignette" aria-hidden="true"></div>
 
-  <!-- Navigation -->
-  <header class="nav" id="nav">
-    <div class="container nav-inner">
-      <a href="#top" class="brand" aria-label="Tiered Systems home">
-        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" />
-          <ellipse cx="12" cy="12" rx="9" ry="4" />
-          <ellipse cx="12" cy="12" rx="4" ry="9" />
-        </svg>
-        <span class="brand-word">Tiered Systems</span>
-      </a>
+  <!-- Non-blocking Floating Status Toast -->
+  <div class="os-status-toast" id="os-status-toast" role="status" aria-live="polite" hidden>
+    <span class="status-pulse" aria-hidden="true"></span>
+    <span id="os-status-text">Live directory ready</span>
+    <button type="button" class="os-toast-dismiss" id="os-status-dismiss" aria-label="Dismiss notification">&times;</button>
+  </div>
 
-      <nav class="nav-links" aria-label="Primary">
-        <a href="#emblem-showcase">Program Tiers</a>
-        <a href="#tiers">Roadmap</a>
-        <a href="#board">Opportunity Board</a>
-        <a href="#schedule">Schedule</a>
-        <a href="#faq">FAQ</a>
-      </nav>
+  <!-- Floating Liquid-Glass HUD -->
+  <div
+    class="os-hud"
+    id="os-hud"
+    data-rail-collapsed="false"
+    data-drawer-open="false"
+    data-inspector-open="true"
+    data-mobile-sheet="peek"
+  >
+    <!-- Top Search Pill & Category Chips -->
+    <header class="os-top-cluster">
+      <div class="os-search-pill glass-surface" role="search">
+        <a href="./program.html" class="os-brand-badge" title="Tiered Systems 4-Tier Program Guide" aria-label="Tiered Systems 4-Tier Program Guide">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <ellipse cx="12" cy="12" rx="9" ry="4" />
+            <ellipse cx="12" cy="12" rx="4" ry="9" />
+          </svg>
+        </a>
 
-      <a href="./board.html" class="btn btn-primary nav-cta">Open the board &rarr;</a>
-    </div>
-  </header>
+        <label for="os-search-input" class="visually-hidden">Search verified MOA partners</label>
+        <span class="os-search-label" aria-hidden="true">SEARCH</span>
 
-  <main id="main">
+        <input
+          type="search"
+          id="os-search-input"
+          class="os-search-input"
+          placeholder="Companies, Batangas hubs, CpE/ECE, MOA ref…"
+          autocomplete="off"
+          spellcheck="false"
+        />
 
-    <!-- Hero -->
-    <section class="hero" id="top">
-      <div class="hero-backdrop" aria-hidden="true">
-        <div class="hero-tiles"></div>
-        <div class="hero-light"></div>
-      </div>
+        <button type="button" class="os-search-clear" id="os-search-clear" aria-label="Clear search" hidden>&times;</button>
 
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <p class="hero-meta">
-            <span>Nov 18–19, 2026</span>
-            <span aria-hidden="true">·</span>
-            <span>CURSOR, BatStateU Alangilan</span>
-          </p>
+        <span class="os-result-pill num" id="os-result-pill" aria-live="polite">— MOAs</span>
 
-          <p class="section-tag">OPPORTUNITY INTELLIGENCE · 2026</p>
-          <h1 class="hero-title">Find the work that moves you forward.</h1>
-
-          <p class="hero-lede">
-            A living career operating system for BatStateU engineers. Discover verified partner companies, compare open placements, and turn your next move into a clear path.
-          </p>
-
-          <div class="hero-actions">
-            <a href="./board.html" class="btn btn-primary btn-lg">
-              Explore verified partners
-              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
-            </a>
-            <a href="#emblem-showcase" class="btn btn-ghost btn-lg">Explore the 4 Tiers</a>
-          </div>
-
-          <p class="event-status" id="event-status" role="status" aria-live="polite">
-            <span class="status-dot" aria-hidden="true"></span>
-            <span id="event-status-text">Checking event status…</span>
-          </p>
-        </div>
-
-        <!-- Actual Product Feature: 3D Tilting Live Map Preview -->
-        <a href="./board.html" class="product-frame js-tilt" aria-label="Open the Opportunity Board map" data-tilt-max="7">
-          <div class="frame-bar">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span class="status-dot-mini" aria-hidden="true"></span>
-              <span class="frame-title">Opportunity Board Radar</span>
-            </div>
-            <span class="frame-meta num" id="preview-count">— partners</span>
-          </div>
-          <div class="frame-body">
-            <div class="preview-map-wrap">
-              <div id="preview-map" class="preview-map" aria-hidden="true"></div>
-              <div class="map-skeleton" id="map-skeleton" aria-hidden="true"></div>
-            </div>
-            <ol class="preview-list" id="preview-list" aria-label="Nearest partner companies to Alangilan campus">
-              <li class="preview-item is-loading"><span class="sk sk-w70"></span><span class="sk sk-w30"></span></li>
-              <li class="preview-item is-loading"><span class="sk sk-w60"></span><span class="sk sk-w30"></span></li>
-              <li class="preview-item is-loading"><span class="sk sk-w80"></span><span class="sk sk-w30"></span></li>
-            </ol>
-          </div>
+        <a href="./program.html" class="os-program-link" title="View the 4-Tier Readiness Program & Schedule">
+          <span>4 Tiers</span>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" /></svg>
         </a>
       </div>
-    </section>
 
-    <!-- Animated Facts Counter Strip -->
-    <section class="facts" aria-label="Program at a glance">
-      <div class="container facts-grid">
-        <div class="fact">
-          <span class="fact-value num js-counter" data-target="4">0</span>
-          <span class="fact-label">calibrated tiers</span>
-        </div>
-        <div class="fact">
-          <span class="fact-value num js-counter" data-target="2">0</span>
-          <span class="fact-label">afternoons, 1:00–5:00 PM</span>
-        </div>
-        <div class="fact">
-          <span class="fact-value num js-counter" id="fact-partners" data-target="16">0</span>
-          <span class="fact-label">MOA partner companies</span>
-        </div>
-        <div class="fact">
-          <span class="fact-value num js-counter" id="fact-slots" data-target="126">0</span>
-          <span class="fact-label">open OJT & hiring slots</span>
-        </div>
+      <!-- Category Filter Pills (ALL · SOFTWARE · HARDWARE · AI / ML · ENERGY) -->
+      <div class="os-cat-row" id="os-cat-row" role="group" aria-label="Sector category filter">
+        <button type="button" class="os-cat-pill glass-pill active" data-cat="ALL">ALL</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="SOFTWARE">SOFTWARE</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="HARDWARE">HARDWARE</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="AI / ML">AI / ML</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="ENERGY">ENERGY</button>
       </div>
-    </section>
+    </header>
 
-    <!-- 3D Section: Official Tiered System 3D Emblem & 4-Tier Progression -->
-    <section class="section tier-showcase-section" id="emblem-showcase" aria-labelledby="emblem-showcase-title">
-      <div class="container emblem-grid">
-        <div class="emblem-copy">
-          <h2 id="emblem-showcase-title" class="section-title">Four tiers to engineering career readiness.</h2>
-          <p class="section-lede">
-            Organized by CURSOR at BatStateU Alangilan. Each tier represents a verified milestone—advancing Computer Engineering students from technical resume calibration to direct company placement on the Opportunity Board.
-          </p>
+    <!-- Left Floating Navigation Rail (Desktop / Tablet) -->
+    <nav class="os-nav-rail glass-surface" id="os-nav-rail" aria-label="Opportunity OS modules">
+      <div class="os-rail-group">
+        <button type="button" class="os-nav-btn" data-panel="distance" title="Campus distance &amp; discipline filters">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2" /></svg>
+          <span>DISTANCE</span>
+        </button>
+        <button type="button" class="os-nav-btn" data-panel="catalog" title="Browse full MOA partner catalog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></svg>
+          <span>CATALOG</span>
+        </button>
+        <button type="button" class="os-nav-btn" data-panel="ai" title="AI Partner Matcher">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" /><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z" /></svg>
+          <span>AI AGENT</span>
+        </button>
+      </div>
 
-          <div class="tier-stages-list" role="tablist" aria-label="Progression tiers">
-            <button type="button" class="tier-stage-btn active" data-stage-tier="1">
-              <span class="stage-num num">T1</span>
-              <div>
-                <strong>Tier 01: Prepare</strong>
-                <p>Technical resume overhaul & verifiable project artifact (code, circuit, CAD).</p>
-              </div>
-            </button>
-            <button type="button" class="tier-stage-btn" data-stage-tier="2">
-              <span class="stage-num num">T2</span>
-              <div>
-                <strong>Tier 02: Level Up</strong>
-                <p>LinkedIn digital architecture & 45-second technical elevator pitch.</p>
-              </div>
-            </button>
-            <button type="button" class="tier-stage-btn" data-stage-tier="3">
-              <span class="stage-num num">T3</span>
-              <div>
-                <strong>Tier 03: Discover</strong>
-                <p>Industry plenary address & alumni engineering career benchmarks.</p>
-              </div>
-            </button>
-            <button type="button" class="tier-stage-btn" data-stage-tier="4">
-              <span class="stage-num num">T4</span>
-              <div>
-                <strong>Tier 04: Connect</strong>
-                <p>Active MOA Opportunity Board station & partner company matching.</p>
-              </div>
-            </button>
+      <div class="os-rail-divider" aria-hidden="true"></div>
+
+      <div class="os-rail-group">
+        <button type="button" class="os-nav-btn" data-panel="inventory" title="Capacity analytics, shortlist &amp; CSV export">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19v-4" /></svg>
+          <span>INVENTORY</span>
+        </button>
+        <button type="button" class="os-nav-btn" data-panel="settings" title="Google Sheets sync, add MOA partner &amp; map prefs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.6.86 1 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+          <span>SETTINGS</span>
+        </button>
+        <button type="button" class="os-nav-btn" data-panel="profile" title="Student profile &amp; 4-Tier readiness tracker">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M5 20a7 7 0 0114 0" /></svg>
+          <span>PROFILE</span>
+        </button>
+      </div>
+
+      <button type="button" class="os-rail-collapse-btn" id="btn-toggle-rail" aria-label="Collapse or expand navigation rail" title="Collapse navigation rail">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" /></svg>
+      </button>
+    </nav>
+
+    <!-- Floating Contextual Tool Drawer -->
+    <section class="os-drawer glass-surface" id="os-drawer" aria-label="Active workspace tool" hidden>
+      <header class="os-drawer-head">
+        <div class="os-sheet-grabber" aria-hidden="true"></div>
+        <div class="os-drawer-title-row">
+          <div>
+            <h2 id="os-drawer-title">Tool Panel</h2>
+            <p id="os-drawer-subtitle" class="os-drawer-sub">Configure Opportunity OS</p>
           </div>
+          <button type="button" class="os-icon-btn" id="btn-drawer-close" aria-label="Close panel">&times;</button>
         </div>
-
-        <div class="emblem-canvas-wrap js-tilt" data-tilt-max="5">
-          <div id="emblem-3d-canvas" class="emblem-3d-canvas" aria-label="Interactive 3D model of the Tiered System emblem and 4 progression tiers"></div>
-          <div class="canvas-tier-indicator">
-            <span class="tier-indicator-pill">
-              <span class="indicator-dot" aria-hidden="true"></span>
-              <span class="indicator-text" id="indicator-tier-name">Tier 01: Prepare · Resume & Project Artifact</span>
-            </span>
-          </div>
-        </div>
-      </div>
+      </header>
+      <div class="os-drawer-body" id="os-drawer-body"></div>
     </section>
 
-    <!-- Tiers Section -->
-    <section class="section" id="tiers" aria-labelledby="tiers-title">
-      <div class="container">
-        <div class="section-head">
-          <h2 id="tiers-title" class="section-title">Four progressive tiers. Each one unlocks the next.</h2>
-          <p class="section-lede">
-            Day 1 builds your professional artifacts. Day 2 connects you to companies with verified agreements.
-          </p>
-        </div>
+    <!-- Right Floating Liquid-Glass Partner Inspector -->
+    <aside class="os-inspector glass-surface" id="os-inspector" aria-label="Selected partner details">
+      <!-- Mobile Compact Peek Bar (visible on <= 768px when peeked) -->
+      <div class="os-inspector-peek" id="os-inspector-peek"></div>
 
-        <div class="tiers" data-tiers>
-          <div class="tier-tabs" role="tablist" aria-label="Program tiers">
-            <button class="tier-tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" data-tier="1">
-              <span class="tier-num num">01</span>
-              <span class="tier-name">Prepare</span>
-              <span class="tier-day">Day 1 · Zoom</span>
-            </button>
-            <button class="tier-tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-tier="2">
-              <span class="tier-num num">02</span>
-              <span class="tier-name">Level Up</span>
-              <span class="tier-day">Day 1 · Zoom</span>
-            </button>
-            <button class="tier-tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-tier="3">
-              <span class="tier-num num">03</span>
-              <span class="tier-name">Discover</span>
-              <span class="tier-day">Day 2 · STEER Hub</span>
-            </button>
-            <button class="tier-tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-tier="4">
-              <span class="tier-num num">04</span>
-              <span class="tier-name">Connect</span>
-              <span class="tier-day">Day 2 · STEER Hub</span>
-            </button>
-          </div>
-
-          <div class="tier-panels">
-            <article class="tier-panel js-tilt" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
-              <div class="tier-panel-copy">
-                <h3>Resume and technical portfolio</h3>
-                <p>Mentor-led session on resume formatting and documenting one technical project you actually built. Feedback covers readability, relevant skills, verifiable contributions, and project documentation.</p>
-              </div>
-              <div class="tier-panel-side">
-                <h4>Required Artifacts</h4>
-                <ul class="check-list">
-                  <li>Digital engineering resume draft</li>
-                  <li>One technical project: code, circuit design, CAD, test results, or demo video</li>
-                </ul>
-                <p class="tier-time num">1:20–2:45 PM · Nov 18 (Zoom)</p>
-              </div>
-            </article>
-
-            <article class="tier-panel js-tilt" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden>
-              <div class="tier-panel-copy">
-                <h3>LinkedIn and technical pitching</h3>
-                <p>Tighten your professional profile, drill a 45–60 second introduction, and draft a 3-to-6-month career roadmap with real-time peer and mentor feedback.</p>
-              </div>
-              <div class="tier-panel-side">
-                <h4>Required Artifacts</h4>
-                <ul class="check-list">
-                  <li>Access to your LinkedIn account</li>
-                  <li>Target discipline (Embedded, Cloud, AI, Telecom, Power)</li>
-                </ul>
-                <p class="tier-time num">3:00–4:15 PM · Nov 18 (Zoom)</p>
-              </div>
-            </article>
-
-            <article class="tier-panel js-tilt" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden>
-              <div class="tier-panel-copy">
-                <h3>Industry expectations & alumni panel</h3>
-                <p>An industry plenary on hiring standards and OJT requirements, followed by a moderated panel with CpE alumni and corporate engineers. You leave with one career path picked and the competencies it needs written down.</p>
-              </div>
-              <div class="tier-panel-side">
-                <h4>Sessions</h4>
-                <ul class="check-list">
-                  <li>Industry plenary address</li>
-                  <li>Alumni panel & open technical forum</li>
-                </ul>
-                <p class="tier-time num">1:20–2:45 PM · Nov 19 (5th Flr STEER Hub)</p>
-              </div>
-            </article>
-
-            <article class="tier-panel js-tilt" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden>
-              <div class="tier-panel-copy">
-                <h3>Opportunity Board and Resource Vault</h3>
-                <p>Career conversations with alumni and engineers, access to the verified partner company radar map, and curated software licenses and certification resources. Record one opportunity and one concrete follow-up before leaving.</p>
-              </div>
-              <div class="tier-panel-side">
-                <h4>Stations</h4>
-                <ul class="check-list">
-                  <li>Interactive Opportunity Board station</li>
-                  <li>Resource Vault access</li>
-                  <li>One-on-one career conversations</li>
-                </ul>
-                <p class="tier-time num">3:00–4:30 PM · Nov 19 (5th Flr STEER Hub)</p>
-              </div>
-            </article>
-          </div>
+      <div class="os-inspector-topbar">
+        <span class="os-verified-chip" id="os-inspector-status">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Active MOA</span>
+        </span>
+        <div class="os-inspector-topbar-actions">
+          <button type="button" class="os-icon-btn" id="btn-inspector-bookmark" aria-label="Save partner to shortlist" title="Save to shortlist">☆</button>
+          <button type="button" class="os-icon-btn" id="btn-inspector-toggle" aria-label="Minimize partner inspector" title="Minimize inspector">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+          </button>
         </div>
       </div>
-    </section>
 
-    <!-- Dynamic Opportunity Board Showcase -->
-    <section class="section section-alt" id="board" aria-labelledby="board-title">
-      <div class="container board-grid">
-        <div class="board-copy">
-          <h2 id="board-title" class="section-title">Verified partner companies. Filtered by distance and discipline.</h2>
-          <p class="section-lede">
-            Every listing represents an active Memorandum of Agreement (MOA) with the university. Select your campus and test the live filters right here:
-          </p>
-
-          <!-- Interactive Live Filter Controls on Landing -->
-          <div class="landing-filter-bar">
-            <div class="filter-chip-group">
-              <label for="landing-filter-program" class="visually-hidden">Program</label>
-              <select id="landing-filter-program" class="landing-select">
-                <option value="all">All Disciplines</option>
-                <option value="CpE">Computer Eng (CpE)</option>
-                <option value="ECE">Electronics (ECE)</option>
-                <option value="EE">Electrical (EE)</option>
-                <option value="CS">Comp Science (CS)</option>
-                <option value="IT">Info Tech (IT)</option>
-              </select>
-
-              <label for="landing-filter-campus" class="visually-hidden">Campus</label>
-              <select id="landing-filter-campus" class="landing-select">
-                <option value="alangilan">BatStateU Alangilan</option>
-                <option value="pabloBorbon">Pablo Borbon</option>
-                <option value="malvar">Malvar</option>
-                <option value="lipa">Lipa</option>
-              </select>
-            </div>
-          </div>
-
-          <dl class="feature-list">
-            <div class="feature">
-              <dt>Discipline matching</dt>
-              <dd>Filter by CpE, ECE, EE, ME, IE, CS, IT, and ChE.</dd>
-            </div>
-            <div class="feature">
-              <dt>Opportunity tracks</dt>
-              <dd>OJT / Internship, Fresh Grad Hiring, Capstone, or Immersion.</dd>
-            </div>
-            <div class="feature">
-              <dt>Haversine distance</dt>
-              <dd>Accurate road and direct distance from Alangilan, Pablo Borbon, or Malvar.</dd>
-            </div>
-            <div class="feature">
-              <dt>Browser shortlist</dt>
-              <dd>Star companies on the board to save and export your personal shortlist.</dd>
-            </div>
-          </dl>
-
-          <a href="./board.html" class="btn btn-primary btn-lg">
-            Launch Fullscreen Board &rarr;
-          </a>
-        </div>
-
-        <div class="partner-table-wrap js-tilt" data-tilt-max="4">
-          <div class="table-header-bar">
-            <span>Verified Hub Capacity</span>
-            <span class="num" id="table-total-slots">126 open slots</span>
-          </div>
-          <table class="partner-table">
-            <caption class="visually-hidden">Partner companies by hub</caption>
-            <thead>
-              <tr>
-                <th scope="col">Industrial Hub</th>
-                <th scope="col" class="t-right">Partners</th>
-                <th scope="col" class="t-right">Open Slots</th>
-              </tr>
-            </thead>
-            <tbody id="hub-table">
-              <tr class="is-loading"><td colspan="3"><span class="sk sk-w100"></span></td></tr>
-              <tr class="is-loading"><td colspan="3"><span class="sk sk-w100"></span></td></tr>
-              <tr class="is-loading"><td colspan="3"><span class="sk sk-w100"></span></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Schedule Section -->
-    <section class="section" id="schedule" aria-labelledby="schedule-title">
-      <div class="container">
-        <div class="section-head">
-          <h2 id="schedule-title" class="section-title">Two calibrated afternoons. One online, one on campus.</h2>
-        </div>
-
-        <div class="days">
-          <article class="day js-tilt" id="day-1" data-tilt-max="5">
-            <header class="day-head">
-              <div>
-                <h3>Day 1 · Prepare and Level Up</h3>
-                <p class="day-where">Wednesday, Nov 18 · Online via Zoom</p>
-              </div>
-              <span class="day-badge" data-day-badge="1" hidden></span>
-            </header>
-            <ol class="timeline">
-              <li><span class="t num">1:00</span><span>Invocation and opening remarks</span></li>
-              <li><span class="t num">1:10</span><span>Event overview and reminders (Zyrell Hubilla)</span></li>
-              <li class="is-key"><span class="t num">1:20</span><span>Tier 01: Resume and technical portfolio workshop</span></li>
-              <li><span class="t num">2:45</span><span>Break & mentor breakout setup</span></li>
-              <li class="is-key"><span class="t num">3:00</span><span>Tier 02: LinkedIn personal architecture and pitching</span></li>
-              <li><span class="t num">4:15</span><span>Plenary profile evaluation and guided assessment</span></li>
-              <li><span class="t num">4:45</span><span>Day 1 synthesis and Day 2 briefing (Harry Dimaano)</span></li>
-              <li><span class="t num">4:55</span><span>Photo opportunity and adjournment</span></li>
-            </ol>
-          </article>
-
-          <article class="day js-tilt" id="day-2" data-tilt-max="5">
-            <header class="day-head">
-              <div>
-                <h3>Day 2 · Discover and Connect</h3>
-                <p class="day-where">Thursday, Nov 19 · 5th Floor STEER Hub</p>
-              </div>
-              <span class="day-badge" data-day-badge="2" hidden></span>
-            </header>
-            <ol class="timeline">
-              <li><span class="t num">1:00</span><span>Invocation and Day 1 synthesis (James Villaflor)</span></li>
-              <li><span class="t num">1:15</span><span>Introduction of guest speakers and alumni</span></li>
-              <li class="is-key"><span class="t num">1:20</span><span>Tier 03: Industry keynote plenary address</span></li>
-              <li class="is-key"><span class="t num">2:00</span><span>Tier 03: CpE alumni panel discussion and open forum</span></li>
-              <li><span class="t num">2:45</span><span>Presentation of certificates to guest speakers</span></li>
-              <li class="is-key"><span class="t num">3:00</span><span>Tier 04: Opportunity Board, Resource Vault & conversations</span></li>
-              <li><span class="t num">4:30</span><span>Raffle draw and roadmap submission</span></li>
-              <li><span class="t num">4:40</span><span>Awarding ceremony and closing remarks (Ivan Salcedo)</span></li>
-            </ol>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="section section-alt" id="faq" aria-labelledby="faq-title">
-      <div class="container faq-grid">
-        <div>
-          <h2 id="faq-title" class="section-title">Frequently asked questions</h2>
-        </div>
-
-        <div class="faq-list">
-          <details class="faq">
-            <summary>Who is eligible to participate?</summary>
-            <p>All Computer Engineering and engineering students at Batangas State University Alangilan preparing for internship, OJT, or entry-level technical roles.</p>
-          </details>
-          <details class="faq">
-            <summary>What should I prepare for Day 1?</summary>
-            <p>Have a digital copy of your draft resume, project files or demo link for at least one technical project, and your active LinkedIn credentials.</p>
-          </details>
-          <details class="faq">
-            <summary>Are certificates of completion issued?</summary>
-            <p>Yes. Attendance is recorded separately for Day 1 (Zoom) and Day 2 (STEER Hub). Certificates of Completion are awarded to students who complete the workshop deliverables.</p>
-          </details>
-          <details class="faq">
-            <summary>Can I access the Opportunity Board after the event?</summary>
-            <p>Yes. The board stays permanently online and accessible on desktop and mobile. Your saved star bookmarks persist safely in your browser.</p>
-          </details>
-          <details class="faq">
-            <summary>Who is organizing this program?</summary>
-            <p>The Computer Engineering Students' Organization (CURSOR) in collaboration with CIRCUIT 2.0 mentors and the College of Engineering.</p>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- Closing Call to Action -->
-    <section class="closing">
-      <div class="container closing-inner">
-        <h2 class="closing-title">Calibrate your trajectory. Find your partner on the map.</h2>
-        <a href="./board.html" class="btn btn-primary btn-lg">
-          Launch Opportunity Board Radar
-          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
-        </a>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container footer-grid">
-      <div class="footer-brand">
-        <span class="brand-word">Tiered Systems</span>
-        <p>Computer Engineering Students' Organization<br />Batangas State University, The National Engineering University – Alangilan</p>
+      <div class="os-inspector-scroll" id="os-inspector-content">
+        <!-- Populated dynamically by js/os-app.js -->
       </div>
 
-      <dl class="footer-team">
-        <div><dt>James G. Villaflor</dt><dd>Event Head</dd></div>
-        <div><dt>Harry V. Dimaano</dt><dd>Event Co-Head</dd></div>
-        <div><dt>Zyrell Anne C. Hubilla</dt><dd>Event Co-Head</dd></div>
-        <div><dt>Ivan V. Salcedo</dt><dd>President, CURSOR</dd></div>
-        <div><dt>Engr. Anthony G. Hernandez</dt><dd>Adviser, CURSOR</dd></div>
-      </dl>
+      <div class="os-insp-actions" id="os-inspector-actions"></div>
+    </aside>
+
+    <!-- Reopen Inspector Floating Pill (when minimized on desktop or hidden on mobile) -->
+    <button type="button" class="os-inspector-reopen glass-pill" id="os-inspector-reopen" hidden>
+      <span class="dot" aria-hidden="true"></span>
+      <span id="os-reopen-label">Partner Details</span>
+    </button>
+
+    <!-- Bottom-Left Floating Map Controls & Layers Switcher -->
+    <div class="os-bottom-left">
+      <div class="os-layers-wrap" id="os-layers-control">
+        <button
+          type="button"
+          class="os-layers-tile glass-surface"
+          id="btn-layers-toggle"
+          aria-expanded="false"
+          aria-controls="os-layers-menu"
+          title="Switch map basemap style"
+        >
+          <span class="os-layers-preview is-satellite" id="os-layers-preview" aria-hidden="true">
+            <span class="layers-grid-mesh"></span>
+          </span>
+          <span class="os-layers-caption">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2L2 5.5 8 9l6-3.5L8 2zM2 8.5L8 12l6-3.5M2 11.5L8 15l6-3.5" /></svg>
+            <span>Layers</span>
+          </span>
+        </button>
+
+        <div class="os-layers-menu glass-surface" id="os-layers-menu" role="menu" aria-label="Map styles" hidden>
+          <button type="button" class="os-layer-opt active" data-style="satellite" role="menuitemradio" aria-checked="true">
+            <span class="layer-swatch swatch-sat" aria-hidden="true"></span>
+            <span>Satellite</span>
+          </button>
+          <button type="button" class="os-layer-opt" data-style="dark" role="menuitemradio" aria-checked="false">
+            <span class="layer-swatch swatch-dark" aria-hidden="true"></span>
+            <span>Obsidian</span>
+          </button>
+          <button type="button" class="os-layer-opt" data-style="street" role="menuitemradio" aria-checked="false">
+            <span class="layer-swatch swatch-street" aria-hidden="true"></span>
+            <span>Street</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="os-map-utils glass-pill" role="toolbar" aria-label="Map camera controls">
+        <button type="button" class="os-util-btn" id="btn-jump-campus" title="Fly to BatStateU campus origin">Campus</button>
+        <button type="button" class="os-util-btn" id="btn-fit-bounds" title="Fit all filtered partner pins">Fit all</button>
+        <span class="os-util-sep" aria-hidden="true"></span>
+        <button type="button" class="os-util-btn icon-only" id="btn-zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
+        <button type="button" class="os-util-btn icon-only" id="btn-zoom-out" aria-label="Zoom out" title="Zoom out">−</button>
+      </div>
     </div>
-    <div class="container footer-bottom">
-      <span>© 2026 CURSOR · BatStateU Alangilan</span>
-      <a href="https://github.com/Jemst0/TieredSystems_OpportunityBoard" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
-    </div>
-  </footer>
 
-  <!-- Scripts: Three.js WebGL Engine, Leaflet, Database, Landing Controller & 3D Scene -->
-  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <!-- Mobile Bottom Liquid-Glass Dock (<= 768px) -->
+    <nav class="os-mobile-dock glass-surface" id="os-mobile-dock" aria-label="Mobile Opportunity OS tools">
+      <button type="button" class="os-dock-btn" data-panel="distance">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2" /></svg>
+        <span>Distance</span>
+      </button>
+      <button type="button" class="os-dock-btn" data-panel="catalog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></svg>
+        <span>Catalog</span>
+      </button>
+      <button type="button" class="os-dock-btn" data-panel="ai">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" /></svg>
+        <span>AI Agent</span>
+      </button>
+      <button type="button" class="os-dock-btn" data-panel="inventory">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19v-4" /></svg>
+        <span>Stats</span>
+      </button>
+      <button type="button" class="os-dock-btn" data-panel="settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.6.86 1 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+        <span>Settings</span>
+      </button>
+      <button type="button" class="os-dock-btn" data-panel="profile">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M5 20a7 7 0 0114 0" /></svg>
+        <span>Profile</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Add Verified MOA Partner Modal -->
+  <div class="os-modal-overlay" id="add-company-modal" role="dialog" aria-modal="true" aria-labelledby="add-modal-title" hidden>
+    <div class="os-modal-card glass-surface">
+      <button type="button" class="os-icon-btn modal-close" id="btn-add-modal-close" aria-label="Close add partner modal">&times;</button>
+      <h2 id="add-modal-title">Add Verified MOA Partner</h2>
+      <p class="os-modal-sub">Pin a new industry partner onto the live radar map. Stored locally in your browser and included in CSV exports.</p>
+
+      <form id="form-add-company" class="os-form">
+        <div class="os-field">
+          <label for="new-name">Company Name *</label>
+          <input type="text" id="new-name" class="os-input" placeholder="e.g. Texas Instruments Philippines" required />
+        </div>
+
+        <div class="os-field-grid-3">
+          <div class="os-field">
+            <label for="new-category">Sector *</label>
+            <select id="new-category" class="os-input">
+              <option value="Semiconductor">Semiconductor</option>
+              <option value="Software/AI">Software / AI</option>
+              <option value="Energy">Clean Energy</option>
+              <option value="Manufacturing">Manufacturing</option>
+              <option value="Telecom">Telecom</option>
+            </select>
+          </div>
+          <div class="os-field">
+            <label for="new-setup">Work Setup</label>
+            <select id="new-setup" class="os-input">
+              <option value="On-Site">On-Site</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="Remote Friendly">Remote Friendly</option>
+            </select>
+          </div>
+          <div class="os-field">
+            <label for="new-slots">Open Slots *</label>
+            <input type="number" id="new-slots" class="os-input" value="10" min="0" required />
+          </div>
+        </div>
+
+        <div class="os-field-grid-2">
+          <div class="os-field">
+            <label for="new-lat">Latitude *</label>
+            <input type="number" step="0.0001" id="new-lat" class="os-input" placeholder="13.9412" required />
+          </div>
+          <div class="os-field">
+            <label for="new-lng">Longitude *</label>
+            <input type="number" step="0.0001" id="new-lng" class="os-input" placeholder="121.1634" required />
+          </div>
+        </div>
+
+        <div class="os-field">
+          <label for="new-address">Full Address / Industrial Park *</label>
+          <input type="text" id="new-address" class="os-input" placeholder="e.g. Lima Technology Center, Lipa City, Batangas" required />
+        </div>
+
+        <div class="os-field-grid-2">
+          <div class="os-field">
+            <label for="new-allowance">Stipend / Allowance</label>
+            <select id="new-allowance" class="os-input">
+              <option value="true">Paid Allowance Provided</option>
+              <option value="false">Standard OJT Immersion</option>
+            </select>
+          </div>
+          <div class="os-field">
+            <label for="new-programs">Programs (comma-separated) *</label>
+            <input type="text" id="new-programs" class="os-input" value="CpE, ECE, EE, CS" required />
+          </div>
+        </div>
+
+        <div class="os-field">
+          <label for="new-desc">Brief Overview &amp; Roles</label>
+          <input type="text" id="new-desc" class="os-input" placeholder="Brief summary of internship tracks offered..." />
+        </div>
+
+        <div class="os-modal-actions">
+          <button type="submit" class="os-cta-light">Save &amp; Pin to Radar</button>
+          <button type="button" id="btn-cancel-add" class="os-btn-ghost">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="./js/database.js"></script>
-  <script type="module" src="./js/three-scene.js"></script>
-  <script type="module" src="./js/landing.js"></script>
+  <script type="module" src="./js/os-app.js"></script>
 </body>
 </html>
