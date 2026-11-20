@@ -164,8 +164,14 @@ function initMap() {
   });
 
   markersLayer = L.layerGroup().addTo(map);
-  setBasemap(state.basemap);
+  const baseLayer = setBasemap(state.basemap);
   updateCampusMarker();
+
+  return baseLayer
+    ? new Promise(resolve => {
+        baseLayer.once("load", resolve);
+      })
+    : Promise.resolve();
 }
 
 function setBasemap(styleKey, { persist = true } = {}) {
@@ -178,10 +184,11 @@ function setBasemap(styleKey, { persist = true } = {}) {
   activeTileLayers.forEach(layer => map?.removeLayer(layer));
   activeTileLayers = [];
 
+  let baseLayer = null;
   if (map) {
     const cfg = BASEMAPS[key];
-    const base = L.tileLayer(cfg.base, { attribution: cfg.attribution, maxZoom: 18 }).addTo(map);
-    activeTileLayers.push(base);
+    baseLayer = L.tileLayer(cfg.base, { attribution: cfg.attribution, maxZoom: 18 }).addTo(map);
+    activeTileLayers.push(baseLayer);
 
     if (cfg.reference) {
       const ref = L.tileLayer(cfg.reference, { maxZoom: 18, zIndex: 10, opacity: 0.9 }).addTo(map);
@@ -200,6 +207,8 @@ function setBasemap(styleKey, { persist = true } = {}) {
     btn.classList.toggle("active", on);
     btn.setAttribute("aria-checked", String(on));
   });
+
+  return baseLayer;
 }
 
 function updateCampusMarker() {
@@ -1224,19 +1233,28 @@ async function loadDirectory() {
   fitAllPins();
 }
 
-function initLaunchArrival() {
+async function initLaunchArrival(readyPromise) {
   const root = document.documentElement;
   if (!root.classList.contains("os-launch-entering")) return;
   try {
     sessionStorage.removeItem("ts_os_launch_morph");
   } catch (_) {}
+
+  const windowLoaded = document.readyState === "complete"
+    ? Promise.resolve()
+    : new Promise(resolve => window.addEventListener("load", resolve, { once: true }));
+
+  const maxWait = new Promise(resolve => window.setTimeout(resolve, 1800));
+  await Promise.race([Promise.all([windowLoaded, readyPromise]), maxWait]);
+  await new Promise(resolve => window.setTimeout(resolve, 140));
+
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
       root.classList.remove("os-launch-entering");
       root.classList.add("os-launch-settling");
       window.setTimeout(() => {
         root.classList.remove("os-launch-settling");
-      }, 760);
+      }, 2150);
     });
   });
 }
@@ -1248,10 +1266,10 @@ document.addEventListener("DOMContentLoaded", () => {
   state.campusKey = state.profile.campus && CAMPUSES[state.profile.campus] ? state.profile.campus : "alangilan";
   state.mobileSheet = isMobileViewport() ? "peek" : "expanded";
 
-  initMap();
+  const tilesReady = initMap();
   syncHudAttributes();
-  initLaunchArrival();
-  loadDirectory();
+  const dirReady = loadDirectory();
+  initLaunchArrival(Promise.all([tilesReady, dirReady]));
 
   /* Search & Category Pills */
   const searchInput = document.getElementById("os-search-input");

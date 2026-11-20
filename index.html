@@ -26,7 +26,7 @@
         var raw = sessionStorage.getItem("ts_os_launch_morph");
         if (!raw) return;
         var data = JSON.parse(raw);
-        if (!data || Date.now() - data.ts > 4500) {
+        if (!data || Date.now() - data.ts > 6000) {
           sessionStorage.removeItem("ts_os_launch_morph");
           return;
         }
@@ -37,7 +37,7 @@
         document.documentElement.classList.add("os-launch-entering");
         window.setTimeout(function () {
           document.documentElement.classList.remove("os-launch-entering");
-        }, 2200);
+        }, 4500);
       } catch (_) {}
     })();
   </script>
