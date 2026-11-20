@@ -1,9 +1,9 @@
 /**
  * TIERED SYSTEMS · Opportunity OS Controller
- * Full-bleed satellite map + translucent cream glass HUD + Vinora analytics + AI Matcher
+ * Full-bleed satellite map + translucent black glass HUD + Vinora analytics + AI Matcher
  */
 import "./glass-warp.js";
-import { CAMPUSES, DatabaseService } from "./database.js";
+import { CAMPUSES, DatabaseService, STORAGE_KEYS } from "./database.js";
 
 const BASEMAPS = {
   satellite: {
@@ -35,7 +35,6 @@ const DRAWER_META = {
   catalog: { title: "MOA Partner Catalog", sub: "Browse, sort & inspect verified industry partners" },
   ai: { title: "AI Partner Agent", sub: "Natural-language career & OJT matching" },
   inventory: { title: "Capacity & Shortlist", sub: "Sector distribution, open slots & CSV export" },
-  settings: { title: "Workspace Settings", sub: "Google Sheets sync, add partner & map layers" },
   profile: { title: "Student Profile", sub: "Your program preferences & 4-Tier readiness" }
 };
 
@@ -169,10 +168,12 @@ function initMap() {
   updateCampusMarker();
 }
 
-function setBasemap(styleKey) {
+function setBasemap(styleKey, { persist = true } = {}) {
   const key = BASEMAPS[styleKey] ? styleKey : "satellite";
   state.basemap = key;
-  state.prefs = DatabaseService.savePrefs({ ...state.prefs, basemap: key });
+  if (persist) {
+    state.prefs = DatabaseService.savePrefs({ ...state.prefs, basemap: key });
+  }
 
   activeTileLayers.forEach(layer => map?.removeLayer(layer));
   activeTileLayers = [];
@@ -198,10 +199,6 @@ function setBasemap(styleKey) {
     const on = btn.dataset.style === key;
     btn.classList.toggle("active", on);
     btn.setAttribute("aria-checked", String(on));
-  });
-
-  document.querySelectorAll("#os-basemap-pills .os-seg-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.basemap === key);
   });
 }
 
@@ -601,9 +598,6 @@ function renderActiveDrawer() {
     case "inventory":
       renderInventoryPane(body);
       break;
-    case "settings":
-      renderSettingsPane(body);
-      break;
     case "profile":
       renderProfilePane(body);
       break;
@@ -715,7 +709,6 @@ function renderCatalogPane(body) {
   body.innerHTML = `
     <div class="os-catalog-toolbar">
       <span class="os-section-label" id="os-catalog-count" style="margin:0;">${state.filtered.length} of ${state.companies.length} partners</span>
-      <button type="button" class="os-btn-ghost" id="os-catalog-add-btn" style="min-height:34px; padding:0 12px; font-size:0.75rem;">+ Add MOA</button>
     </div>
 
     <div class="os-seg-grid cols-3" id="os-sort-pills">
@@ -756,8 +749,6 @@ function renderCatalogPane(body) {
       }
     </div>
   `;
-
-  body.querySelector("#os-catalog-add-btn")?.addEventListener("click", openAddModal);
 
   body.querySelectorAll("#os-sort-pills .os-seg-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -940,9 +931,9 @@ function renderInventoryPane(body) {
     en: state.companies.filter(c => c.type === "Energy").length
   };
   const rings = [
-    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#0b0b0d" },
+    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#ffffff" },
     { label: "Software & Telecom", pct: Math.round((counts.sw / totalCount) * 100), r: 31, color: "#E8590C" },
-    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#686870" }
+    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#8a8a96" }
   ];
 
   body.innerHTML = `
@@ -978,7 +969,7 @@ function renderInventoryPane(body) {
               const circ = 2 * Math.PI * ring.r;
               const dash = ((ring.pct / 100) * circ).toFixed(1);
               return `
-                <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="rgba(11,11,13,0.12)" stroke-width="7" />
+                <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="7" />
                 <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="${ring.color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 54 54)" />
               `;
             })
@@ -1036,75 +1027,6 @@ function renderInventoryPane(body) {
   body.querySelector("#os-export-shortlist")?.addEventListener("click", () => {
     const list = savedCompanies.length ? savedCompanies : state.filtered;
     exportCSV(list, savedCompanies.length ? "Shortlist" : "Filtered");
-  });
-}
-
-function renderSettingsPane(body) {
-  const sheetUrl = DatabaseService.getSheetUrl();
-  body.innerHTML = `
-    <div>
-      <span class="os-section-label"><span>Basemap Style</span></span>
-      <div class="os-seg-grid cols-3" id="os-basemap-pills">
-        <button type="button" class="os-seg-btn ${state.basemap === "satellite" ? "active" : ""}" data-basemap="satellite">Satellite</button>
-        <button type="button" class="os-seg-btn ${state.basemap === "dark" ? "active" : ""}" data-basemap="dark">Obsidian</button>
-        <button type="button" class="os-seg-btn ${state.basemap === "street" ? "active" : ""}" data-basemap="street">Street</button>
-      </div>
-    </div>
-
-    <div class="os-toggle-row">
-      <div>
-        <div class="os-toggle-title">Distance Radius Ring</div>
-        <div class="os-toggle-sub">Draw dashed km circle around campus</div>
-      </div>
-      <button type="button" class="os-switch" id="os-radius-ring-toggle" role="switch" aria-checked="${state.showRadius}" aria-label="Show distance radius ring"></button>
-    </div>
-
-    <div class="os-slider-card">
-      <span class="os-section-label"><span>Google Sheets Live Sync</span></span>
-      <form id="os-sync-form" style="display:flex; flex-direction:column; gap:9px;">
-        <label for="os-sheet-url" class="visually-hidden">Published Google Sheet CSV URL</label>
-        <input type="url" id="os-sheet-url" class="os-input" value="${escapeHtml(sheetUrl)}" placeholder="https://docs.google.com/.../pub?output=csv" />
-        <div class="os-seg-grid">
-          <button type="submit" class="os-cta-light">Save &amp; Sync</button>
-          <a href="./data/moa_companies_template.csv" download class="os-btn-ghost">CSV Template</a>
-        </div>
-      </form>
-    </div>
-
-    <div class="os-seg-grid">
-      <button type="button" class="os-btn-ghost" id="os-settings-add-btn">+ Add MOA Partner</button>
-      <button type="button" class="os-btn-ghost is-danger" id="os-reset-cache">Reset Cache</button>
-    </div>
-
-    <a href="./program.html" class="os-btn-ghost" style="width:100%;">Open 4-Tier Program &amp; Schedule &rarr;</a>
-  `;
-
-  body.querySelectorAll("#os-basemap-pills .os-seg-btn").forEach(btn => {
-    btn.addEventListener("click", () => setBasemap(btn.dataset.basemap));
-  });
-
-  body.querySelector("#os-radius-ring-toggle")?.addEventListener("click", e => {
-    state.showRadius = !state.showRadius;
-    state.prefs = DatabaseService.savePrefs({ ...state.prefs, showRadius: state.showRadius });
-    e.currentTarget.setAttribute("aria-checked", String(state.showRadius));
-    updateRadiusCircle();
-  });
-
-  body.querySelector("#os-sync-form")?.addEventListener("submit", async e => {
-    e.preventDefault();
-    const url = body.querySelector("#os-sheet-url")?.value || "";
-    DatabaseService.setSheetUrl(url);
-    await loadDirectory();
-  });
-
-  body.querySelector("#os-settings-add-btn")?.addEventListener("click", openAddModal);
-
-  body.querySelector("#os-reset-cache")?.addEventListener("click", async () => {
-    DatabaseService.clearCustomCompanies();
-    DatabaseService.setSheetUrl("");
-    hideToast();
-    await loadDirectory();
-    showToast("Local partner cache reset to verified defaults.");
   });
 }
 
@@ -1291,16 +1213,6 @@ function exportCSV(companies, label) {
   URL.revokeObjectURL(url);
 }
 
-function openAddModal() {
-  const modal = document.getElementById("add-company-modal");
-  if (modal) modal.hidden = false;
-}
-
-function closeAddModal() {
-  const modal = document.getElementById("add-company-modal");
-  if (modal) modal.hidden = true;
-}
-
 async function loadDirectory() {
   const res = await DatabaseService.loadCompanies();
   state.companies = res.companies || [];
@@ -1417,50 +1329,27 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-zoom-in")?.addEventListener("click", () => map?.zoomIn());
   document.getElementById("btn-zoom-out")?.addEventListener("click", () => map?.zoomOut());
 
-  /* Add Partner Modal */
-  document.getElementById("btn-add-modal-close")?.addEventListener("click", closeAddModal);
-  document.getElementById("btn-cancel-add")?.addEventListener("click", closeAddModal);
-  document.getElementById("add-company-modal")?.addEventListener("click", e => {
-    if (e.target.id === "add-company-modal") closeAddModal();
-  });
-
-  document.getElementById("form-add-company")?.addEventListener("submit", e => {
-    e.preventDefault();
-    const allow = document.getElementById("new-allowance").value === "true";
-    const newCompany = {
-      id: `moa-custom-${Date.now()}`,
-      name: document.getElementById("new-name").value.trim(),
-      category: document.getElementById("new-category").value,
-      type: document.getElementById("new-category").value,
-      hub: "Calabarzon / NCR",
-      lat: parseFloat(document.getElementById("new-lat").value),
-      lng: parseFloat(document.getElementById("new-lng").value),
-      address: document.getElementById("new-address").value.trim(),
-      slots: parseInt(document.getElementById("new-slots").value, 10) || 5,
-      workSetup: document.getElementById("new-setup").value || "On-Site",
-      hasAllowance: allow,
-      allowanceDesc: allow ? "Allowance Provided" : "Standard Educational Immersion",
-      moaStatus: `Active MOA • Valid thru ${new Date().getFullYear() + 2}`,
-      moaRef: "BSU-MOA-NEW",
-      programs: document.getElementById("new-programs").value.split(",").map(s => s.trim()).filter(Boolean),
-      accepts: ["OJT / Internship"],
-      moaCoordinator: "CURSOR / Office of Industry Relations",
-      description: document.getElementById("new-desc").value.trim() || "Verified MOA partner added via Opportunity OS."
-    };
-
-    DatabaseService.addCustomCompany(newCompany);
-    state.companies.unshift(newCompany);
-    closeAddModal();
-    document.getElementById("form-add-company").reset();
-    refreshWorkspace();
-    selectCompany(newCompany.id, { pan: true, expandMobile: true });
-    showToast(`Added ${newCompany.name} to Opportunity OS.`);
-  });
-
-  /* Toast & Offline / Online */
+  /* Toast, Offline / Online & Live Admin Storage Sync */
   document.getElementById("os-status-dismiss")?.addEventListener("click", hideToast);
   window.addEventListener("offline", () => showToast("Offline mode · Showing locally cached MOA directory."));
   window.addEventListener("online", hideToast);
+  window.addEventListener("storage", e => {
+    if (e.key === STORAGE_KEYS.OS_PREFS) {
+      state.prefs = DatabaseService.getPrefs();
+      const nextBasemap = state.prefs.basemap || "satellite";
+      if (nextBasemap !== state.basemap) {
+        setBasemap(nextBasemap, { persist: false });
+      }
+      state.showRadius = state.prefs.showRadius !== false;
+      updateRadiusCircle();
+    } else if (
+      e.key === STORAGE_KEYS.CUSTOM_COMPANIES ||
+      e.key === STORAGE_KEYS.SHEET_CSV_URL ||
+      e.key === STORAGE_KEYS.CACHED_SHEET_DATA
+    ) {
+      loadDirectory();
+    }
+  });
 
   /* Resize & Keyboard Shortcuts */
   window.addEventListener("resize", () => {
@@ -1476,8 +1365,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (layersMenu && !layersMenu.hidden) {
         layersMenu.hidden = true;
         layersBtn?.setAttribute("aria-expanded", "false");
-      } else if (!document.getElementById("add-company-modal")?.hidden) {
-        closeAddModal();
       } else if (state.activePanel) {
         closeDrawer();
       }

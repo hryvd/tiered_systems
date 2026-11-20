@@ -111,10 +111,6 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19v-4" /></svg>
           <span>INVENTORY</span>
         </button>
-        <button type="button" class="os-nav-btn" data-panel="settings" title="Google Sheets sync, add MOA partner &amp; map prefs">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.6.86 1 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
-          <span>SETTINGS</span>
-        </button>
         <button type="button" class="os-nav-btn" data-panel="profile" title="Student profile &amp; 4-Tier readiness tracker">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M5 20a7 7 0 0114 0" /></svg>
           <span>PROFILE</span>
@@ -235,96 +231,11 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19v-4" /></svg>
         <span>Stats</span>
       </button>
-      <button type="button" class="os-dock-btn" data-panel="settings">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.6.86 1 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
-        <span>Settings</span>
-      </button>
       <button type="button" class="os-dock-btn" data-panel="profile">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M5 20a7 7 0 0114 0" /></svg>
         <span>Profile</span>
       </button>
     </nav>
-  </div>
-
-  <!-- Add Verified MOA Partner Modal -->
-  <div class="os-modal-overlay" id="add-company-modal" role="dialog" aria-modal="true" aria-labelledby="add-modal-title" hidden>
-    <div class="os-modal-card glass-surface">
-      <button type="button" class="os-icon-btn modal-close" id="btn-add-modal-close" aria-label="Close add partner modal">&times;</button>
-      <h2 id="add-modal-title">Add Verified MOA Partner</h2>
-      <p class="os-modal-sub">Pin a new industry partner onto the live radar map. Stored locally in your browser and included in CSV exports.</p>
-
-      <form id="form-add-company" class="os-form">
-        <div class="os-field">
-          <label for="new-name">Company Name *</label>
-          <input type="text" id="new-name" class="os-input" placeholder="e.g. Texas Instruments Philippines" required />
-        </div>
-
-        <div class="os-field-grid-3">
-          <div class="os-field">
-            <label for="new-category">Sector *</label>
-            <select id="new-category" class="os-input">
-              <option value="Semiconductor">Semiconductor</option>
-              <option value="Software/AI">Software / AI</option>
-              <option value="Energy">Clean Energy</option>
-              <option value="Manufacturing">Manufacturing</option>
-              <option value="Telecom">Telecom</option>
-            </select>
-          </div>
-          <div class="os-field">
-            <label for="new-setup">Work Setup</label>
-            <select id="new-setup" class="os-input">
-              <option value="On-Site">On-Site</option>
-              <option value="Hybrid">Hybrid</option>
-              <option value="Remote Friendly">Remote Friendly</option>
-            </select>
-          </div>
-          <div class="os-field">
-            <label for="new-slots">Open Slots *</label>
-            <input type="number" id="new-slots" class="os-input" value="10" min="0" required />
-          </div>
-        </div>
-
-        <div class="os-field-grid-2">
-          <div class="os-field">
-            <label for="new-lat">Latitude *</label>
-            <input type="number" step="0.0001" id="new-lat" class="os-input" placeholder="13.9412" required />
-          </div>
-          <div class="os-field">
-            <label for="new-lng">Longitude *</label>
-            <input type="number" step="0.0001" id="new-lng" class="os-input" placeholder="121.1634" required />
-          </div>
-        </div>
-
-        <div class="os-field">
-          <label for="new-address">Full Address / Industrial Park *</label>
-          <input type="text" id="new-address" class="os-input" placeholder="e.g. Lima Technology Center, Lipa City, Batangas" required />
-        </div>
-
-        <div class="os-field-grid-2">
-          <div class="os-field">
-            <label for="new-allowance">Stipend / Allowance</label>
-            <select id="new-allowance" class="os-input">
-              <option value="true">Paid Allowance Provided</option>
-              <option value="false">Standard OJT Immersion</option>
-            </select>
-          </div>
-          <div class="os-field">
-            <label for="new-programs">Programs (comma-separated) *</label>
-            <input type="text" id="new-programs" class="os-input" value="CpE, ECE, EE, CS" required />
-          </div>
-        </div>
-
-        <div class="os-field">
-          <label for="new-desc">Brief Overview &amp; Roles</label>
-          <input type="text" id="new-desc" class="os-input" placeholder="Brief summary of internship tracks offered..." />
-        </div>
-
-        <div class="os-modal-actions">
-          <button type="submit" class="os-cta-light">Save &amp; Pin to Radar</button>
-          <button type="button" id="btn-cancel-add" class="os-btn-ghost">Cancel</button>
-        </div>
-      </form>
-    </div>
   </div>
 
   <!-- Scripts -->

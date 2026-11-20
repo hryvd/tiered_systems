@@ -717,6 +717,12 @@ const DatabaseService = {
     return existing;
   },
 
+  removeCustomCompany(companyId) {
+    const next = this.getCustomCompanies().filter(c => c.id !== companyId);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_COMPANIES, JSON.stringify(next));
+    return next;
+  },
+
   clearCustomCompanies() {
     localStorage.removeItem(STORAGE_KEYS.CUSTOM_COMPANIES);
   },
@@ -801,4 +807,4 @@ window.CAMPUSES = CAMPUSES;
 window.DatabaseService = DatabaseService;
 window.DEFAULT_MOA_COMPANIES = DEFAULT_MOA_COMPANIES;
 
-export { CAMPUSES, DatabaseService, DEFAULT_MOA_COMPANIES };
+export { CAMPUSES, DatabaseService, DEFAULT_MOA_COMPANIES, STORAGE_KEYS };
