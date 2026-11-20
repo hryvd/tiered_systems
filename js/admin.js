@@ -1,6 +1,6 @@
 /**
  * TIERED SYSTEMS · Direct Administrator Console Controller
- * Manages Opportunity OS defaults (basemap, radius ring), live Google Sheets CSV sync,
+ * Manages Opportunity Radar defaults (basemap, radius ring), live Google Sheets CSV sync,
  * and local custom MOA partner entries with no login gate.
  */
 import "./glass-warp.js";
@@ -305,7 +305,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("admin-new-slots").value = "10";
     document.getElementById("admin-new-programs").value = "CpE, ECE, EE, CS";
     await loadDirectory();
-    showToast(`Added ${newCompany.name} to Opportunity OS.`);
+    showToast(`Added ${newCompany.name} to Opportunity Radar.`);
   });
 
   document.getElementById("admin-dir-search")?.addEventListener("input", e => {

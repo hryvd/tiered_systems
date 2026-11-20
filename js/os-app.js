@@ -1,5 +1,5 @@
 /**
- * TIERED SYSTEMS · Opportunity OS Controller
+ * TIERED SYSTEMS · Opportunity Radar Controller
  * Full-bleed satellite map + translucent black glass HUD + Vinora analytics + AI Matcher
  */
 import "./glass-warp.js";
@@ -1177,7 +1177,7 @@ function renderProfilePane(body) {
     state.campusKey = body.querySelector("#os-prof-campus")?.value || "alangilan";
     updateCampusMarker();
     refreshWorkspace();
-    showToast(`Filtered Opportunity OS for ${state.programFilter} from ${getCampus().shortName}.`);
+    showToast(`Filtered Opportunity Radar for ${state.programFilter} from ${getCampus().shortName}.`);
   });
 }
 

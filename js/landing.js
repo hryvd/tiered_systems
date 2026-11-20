@@ -101,7 +101,7 @@
         text = `Day ${next.day} starts ${when} at 1:00 PM ${next.where}`;
         state = "is-soon";
       } else {
-        text = "The event has concluded. The Opportunity Board remains active.";
+        text = "The event has concluded. The Opportunity Radar remains active.";
       }
 
       statusEl.classList.remove("is-live", "is-soon");

@@ -151,7 +151,7 @@
     { tier: 1, name: "Prepare", radius: 2.7, yPos: -1.7, label: "Tier 01: Prepare · Resume & Project Artifact" },
     { tier: 2, name: "Level Up", radius: 2.2, yPos: -1.45, label: "Tier 02: Level Up · LinkedIn Architecture & Pitch" },
     { tier: 3, name: "Discover", radius: 1.7, yPos: -1.2, label: "Tier 03: Discover · Industry Keynote & Alumni Panel" },
-    { tier: 4, name: "Connect", radius: 1.2, yPos: -0.95, label: "Tier 04: Connect · Active MOA Opportunity Board" }
+    { tier: 4, name: "Connect", radius: 1.2, yPos: -0.95, label: "Tier 04: Connect · Active MOA Opportunity Radar" }
   ];
 
   tierConfigs.forEach((cfg, idx) => {

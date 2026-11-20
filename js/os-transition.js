@@ -1,7 +1,7 @@
 /**
- * TIERED SYSTEMS · Opportunity OS Launch Morph Transition
+ * TIERED SYSTEMS · Opportunity Radar Launch Morph Transition
  * Morphs any clicked [data-os-launch] CTA button into the exact screen geometry
- * of the Opportunity OS .os-search-pill search bar, blooms with a luminous
+ * of the Opportunity Radar .os-search-pill search bar, blooms with a luminous
  * burnt-orange/white glow while fading the backdrop to #09090b, then hands off
  * across navigation via sessionStorage so index.html fades the glow directly into
  * the live search bar.
@@ -133,7 +133,7 @@ function handleLaunchClick(e, link) {
     ? computed.backgroundColor
     : "#f7f7f8";
   const textColor = computed.color || "#09090b";
-  const labelText = (link.textContent || "Open Opportunity OS").replace(/\s+/g, " ").trim();
+  const labelText = (link.textContent || "Open Opportunity Radar").replace(/\s+/g, " ").trim();
 
   const veil = document.createElement("div");
   veil.className = "os-launch-veil";

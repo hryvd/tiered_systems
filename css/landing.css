@@ -403,7 +403,7 @@ a { color: inherit; }
   font-weight: 700;
 }
 
-/* Opportunity OS Capacity Showcase --------------------------------------- */
+/* Opportunity Radar Capacity Showcase ------------------------------------ */
 .board-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
 .board-copy .btn { margin-top: var(--space-8); }
 
