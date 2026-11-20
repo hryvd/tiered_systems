@@ -167,6 +167,16 @@ function initMap() {
   const baseLayer = setBasemap(state.basemap);
   updateCampusMarker();
 
+  map.on("click", () => {
+    if (!isMobileViewport()) return;
+    if (state.activePanel) {
+      closeDrawer();
+    } else if (state.mobileSheet === "expanded") {
+      state.mobileSheet = "peek";
+      syncHudAttributes();
+    }
+  });
+
   return baseLayer
     ? new Promise(resolve => {
         baseLayer.once("load", resolve);
@@ -286,7 +296,15 @@ function fitAllPins() {
   const points = state.filtered.map(c => [c.lat, c.lng]);
   points.push([campus.lat, campus.lng]);
   const bounds = L.latLngBounds(points);
-  map.fitBounds(bounds, { padding: isMobileViewport() ? [60, 40] : [70, 70], maxZoom: 13 });
+  if (isMobileViewport()) {
+    map.fitBounds(bounds, {
+      paddingTopLeft: [24, 118],
+      paddingBottomRight: [24, 152],
+      maxZoom: 13
+    });
+  } else {
+    map.fitBounds(bounds, { padding: [70, 70], maxZoom: 13 });
+  }
 }
 
 /* Filtering & Sorting ---------------------------------------------------- */
@@ -450,11 +468,19 @@ function renderInspector() {
           <div class="os-peek-sub">${distKm} km · ${isFull ? "Cohort Full" : `${company.slots} slots`}</div>
         </div>
       </div>
-      <button type="button" class="os-peek-btn" id="btn-mobile-expand-sheet">Inspect</button>
+      <div class="os-peek-actions">
+        <button type="button" class="os-peek-btn" id="btn-mobile-expand-sheet">Inspect</button>
+        <button type="button" class="os-peek-close" id="btn-mobile-hide-sheet" aria-label="Hide partner bar">&times;</button>
+      </div>
     `;
     peek.querySelector("#btn-mobile-expand-sheet")?.addEventListener("click", e => {
       e.stopPropagation();
       state.mobileSheet = "expanded";
+      syncHudAttributes();
+    });
+    peek.querySelector("#btn-mobile-hide-sheet")?.addEventListener("click", e => {
+      e.stopPropagation();
+      state.mobileSheet = "hidden";
       syncHudAttributes();
     });
   }
@@ -1233,6 +1259,64 @@ async function loadDirectory() {
   fitAllPins();
 }
 
+function bindVerticalSwipe(el, { onSwipeDown, onSwipeUp } = {}) {
+  if (!el) return;
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+
+  el.addEventListener("touchstart", e => {
+    if (e.touches.length !== 1) return;
+    tracking = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  el.addEventListener("touchend", e => {
+    if (!tracking || !e.changedTouches.length) return;
+    tracking = false;
+    const dx = Math.abs(e.changedTouches[0].clientX - startX);
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dy) < 36 || Math.abs(dy) <= dx * 1.2) return;
+    if (dy > 0) onSwipeDown?.();
+    else onSwipeUp?.();
+  }, { passive: true });
+}
+
+function initMobileSheetGestures() {
+  const drawerHead = document.querySelector("#os-drawer .os-drawer-head");
+  const drawerGrabber = document.querySelector("#os-drawer .os-sheet-grabber");
+  const inspGrabber = document.getElementById("os-inspector-grabber");
+  const inspTopbar = document.querySelector("#os-inspector .os-inspector-topbar");
+  const inspPeek = document.getElementById("os-inspector-peek");
+
+  const collapseInspectorToPeek = () => {
+    if (!isMobileViewport()) return;
+    state.mobileSheet = "peek";
+    syncHudAttributes();
+  };
+
+  bindVerticalSwipe(drawerHead, { onSwipeDown: closeDrawer });
+  drawerGrabber?.addEventListener("click", closeDrawer);
+
+  bindVerticalSwipe(inspGrabber, { onSwipeDown: collapseInspectorToPeek });
+  bindVerticalSwipe(inspTopbar, { onSwipeDown: collapseInspectorToPeek });
+  inspGrabber?.addEventListener("click", collapseInspectorToPeek);
+
+  bindVerticalSwipe(inspPeek, {
+    onSwipeUp: () => {
+      if (!isMobileViewport()) return;
+      state.mobileSheet = "expanded";
+      syncHudAttributes();
+    },
+    onSwipeDown: () => {
+      if (!isMobileViewport()) return;
+      state.mobileSheet = "hidden";
+      syncHudAttributes();
+    }
+  });
+}
+
 async function initLaunchArrival(readyPromise) {
   const root = document.documentElement;
   if (!root.classList.contains("os-launch-entering")) return;
@@ -1268,6 +1352,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const tilesReady = initMap();
   syncHudAttributes();
+  initMobileSheetGestures();
   const dirReady = loadDirectory();
   initLaunchArrival(Promise.all([tilesReady, dirReady]));
 

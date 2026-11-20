@@ -113,19 +113,19 @@ function renderDirectoryTable() {
       const sectorHub = `${c.type || "Partner"} · ${c.hub || "Batangas"}`;
       return `
         <tr>
-          <td>
+          <td class="admin-cell-partner" data-label="Partner">
             <span class="admin-partner-name">${escapeHtml(c.name)}</span>
             <span class="admin-partner-addr">${escapeHtml(c.address || "")}</span>
           </td>
-          <td>${escapeHtml(sectorHub)}</td>
-          <td class="num">${escapeHtml(programsText)}</td>
-          <td class="num">${slotsVal > 0 ? `${slotsVal} open` : "Full"}</td>
-          <td>
+          <td data-label="Sector &amp; Hub">${escapeHtml(sectorHub)}</td>
+          <td class="num" data-label="Programs">${escapeHtml(programsText)}</td>
+          <td class="num" data-label="Slots">${slotsVal > 0 ? `${slotsVal} open` : "Full"}</td>
+          <td data-label="Origin">
             <span class="admin-origin-pill ${isCustom ? "is-custom" : ""}">
               ${isCustom ? "Custom Local" : "Verified Base"}
             </span>
           </td>
-          <td class="t-right">
+          <td class="t-right" data-label="Action">
             ${
               isCustom
                 ? `<button type="button" class="admin-btn-ghost is-danger is-sm" data-remove-id="${escapeHtml(c.id)}">Remove</button>`
