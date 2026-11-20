@@ -12,7 +12,7 @@
   const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
   const EVENT_DAYS = [
     { day: 1, date: "2026-11-18", start: "2026-11-18T13:00:00+08:00", end: "2026-11-18T17:00:00+08:00", where: "on Zoom" },
-    { day: 2, date: "2026-11-19", start: "2026-11-19T13:00:00+08:00", end: "2026-11-19T17:00:00+08:00", where: "at the 5th Floor STEER Hub" }
+    { day: 2, date: "2026-11-25", start: "2026-11-25T13:00:00+08:00", end: "2026-11-25T17:00:00+08:00", where: "at the 5th Floor STEER Hub" }
   ];
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -97,7 +97,7 @@
         state = "is-live";
       } else if (next) {
         const tomorrow = manilaDateString(now + 24 * 60 * 60 * 1000);
-        const when = next.date === today ? "today" : next.date === tomorrow ? "tomorrow" : next.day === 1 ? "Nov 18" : "Nov 19";
+        const when = next.date === today ? "today" : next.date === tomorrow ? "tomorrow" : next.day === 1 ? "Nov 18" : "Nov 25";
         text = `Day ${next.day} starts ${when} at 1:00 PM ${next.where}`;
         state = "is-soon";
       } else {
@@ -148,35 +148,8 @@
     setInterval(update, 30 * 1000);
   }
 
-  /* 3D Card Perspective Tilt Effect (Zero External Libs) ------------------ */
-  function init3DTilt() {
-    if (reduceMotion) return;
-    const cards = document.querySelectorAll(".js-tilt");
-
-    cards.forEach(card => {
-      const maxTilt = parseFloat(card.dataset.tiltMax) || 6;
-
-      function onMouseMove(e) {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        const rotateX = ((y - centerY) / centerY) * -maxTilt;
-        const rotateY = ((x - centerX) / centerX) * maxTilt;
-
-        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.015, 1.015, 1.015)`;
-      }
-
-      function onMouseLeave() {
-        card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
-      }
-
-      card.addEventListener("mousemove", onMouseMove);
-      card.addEventListener("mouseleave", onMouseLeave);
-    });
-  }
+  /* Flat Card Mode (No 3D Perspective Tilt) ------------------------------ */
+  function init3DTilt() {}
 
   /* Animated Number Counter Tickers -------------------------------------- */
   function initCounters() {

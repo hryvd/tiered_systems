@@ -32,44 +32,44 @@
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
   scene.add(ambientLight);
 
-  // Radiant Champagne-Gold Core Light
-  const coreLight = new THREE.PointLight(0xe9c87b, 3.6, 14, 1.2);
+  // Neutral Soft Key & Fill Lighting (No Gold/Orange Blooms)
+  const coreLight = new THREE.PointLight(0x9ec094, 1.4, 12, 1.4);
   coreLight.position.set(0, 0.2, 0);
   masterGroup.add(coreLight);
 
-  // Key light for crisp metallic specular highlights
-  const keyLight = new THREE.DirectionalLight(0xfff8e6, 2.4);
+  // Key light for clean matte specular definition
+  const keyLight = new THREE.DirectionalLight(0xf4f5f2, 2.0);
   keyLight.position.set(6, 6, 7);
   scene.add(keyLight);
 
-  // Rim back-light for edge separation
-  const rimLight = new THREE.DirectionalLight(0xc99a3e, 3.0);
+  // Subtle sage rim light for edge separation
+  const rimLight = new THREE.DirectionalLight(0x9ec094, 1.5);
   rimLight.position.set(-6, -4, -4);
   scene.add(rimLight);
 
   // Materials
-  // 1. Brushed Champagne-Gold Metallic (Official Tiered System Emblem)
+  // 1. Matte Anodized Silver-Sage Metallic (Official Tiered System Emblem)
   const bronzeEmblemMat = new THREE.MeshStandardMaterial({
-    color: 0xe9c87b,
-    metalness: 0.94,
-    roughness: 0.2,
-    envMapIntensity: 1.6
-  });
-
-  // 2. Olive-Obsidian Beveled Chassis Material (Background Squircles)
-  const chassisTileMat = new THREE.MeshStandardMaterial({
-    color: 0x162216,
-    metalness: 0.85,
-    roughness: 0.4
-  });
-
-  // 3. Glowing Core Sphere Material
-  const coreGlowMat = new THREE.MeshStandardMaterial({
-    color: 0xe9c87b,
-    emissive: 0xc99a3e,
-    emissiveIntensity: 0.72,
+    color: 0xcad4c6,
     metalness: 0.72,
-    roughness: 0.28
+    roughness: 0.36,
+    envMapIntensity: 1.1
+  });
+
+  // 2. Dark Olive-Obsidian Beveled Chassis Material (Background Squircles)
+  const chassisTileMat = new THREE.MeshStandardMaterial({
+    color: 0x151e16,
+    metalness: 0.55,
+    roughness: 0.52
+  });
+
+  // 3. Matte Sage Core Sphere Material
+  const coreGlowMat = new THREE.MeshStandardMaterial({
+    color: 0x9ec094,
+    emissive: 0x4f7149,
+    emissiveIntensity: 0.35,
+    metalness: 0.45,
+    roughness: 0.4
   });
 
   // --- 1. Background Matrix of Squircle Chassis Tiles (From CURSOR Poster) ---
@@ -165,21 +165,21 @@
     // Dark metallic disc platform
     const discGeo = new THREE.CylinderGeometry(cfg.radius, cfg.radius * 1.04, 0.06, 48);
     const discMat = new THREE.MeshStandardMaterial({
-      color: 0x162216,
-      metalness: 0.9,
-      roughness: 0.4
+      color: 0x151e16,
+      metalness: 0.55,
+      roughness: 0.52
     });
     const discMesh = new THREE.Mesh(discGeo, discMat);
     platformGroup.add(discMesh);
 
-    // Glowing perimeter circuit rim
+    // Matte perimeter circuit rim
     const rimGeo = new THREE.TorusGeometry(cfg.radius * 1.02, 0.035, 16, 64);
     const rimMat = new THREE.MeshStandardMaterial({
-      color: 0x3b4936,
+      color: 0x354336,
       emissive: 0x000000,
       emissiveIntensity: 0,
-      metalness: 0.8,
-      roughness: 0.2
+      metalness: 0.5,
+      roughness: 0.35
     });
     const rimMesh = new THREE.Mesh(rimGeo, rimMat);
     rimMesh.rotation.x = Math.PI / 2;
@@ -211,10 +211,10 @@
   }
   particleGeo.setAttribute("position", new THREE.BufferAttribute(particlePos, 3));
   const particleMat = new THREE.PointsMaterial({
-    color: 0xf5da93,
-    size: 0.05,
+    color: 0xcad4c6,
+    size: 0.045,
     transparent: true,
-    opacity: 0.65
+    opacity: 0.45
   });
   const particles = new THREE.Points(particleGeo, particleMat);
   masterGroup.add(particles);
@@ -293,29 +293,29 @@
     tierPlatforms.forEach((p) => {
       const match = p.tier === tierNum;
       if (match) {
-        // Bright Champagne Gold glow on active tier rim
-        p.rimMesh.material.color.setHex(0xe9c87b);
-        p.rimMesh.material.emissive.setHex(0xc99a3e);
-        p.rimMesh.material.emissiveIntensity = 1.35;
-        p.discMesh.material.color.setHex(0x283825);
+        // Matte Botanical Sage active tier rim (no bloom)
+        p.rimMesh.material.color.setHex(0x9ec094);
+        p.rimMesh.material.emissive.setHex(0x4f7149);
+        p.rimMesh.material.emissiveIntensity = 0.35;
+        p.discMesh.material.color.setHex(0x1f2c20);
         p.targetY = p.baseY + 0.14; // Slightly elevate active tier platform
 
         if (indicatorEl) {
           indicatorEl.textContent = p.label;
         }
       } else {
-        // Inactive tiers stay subtle olive metallic
-        p.rimMesh.material.color.setHex(0x364633);
+        // Inactive tiers stay matte olive-obsidian
+        p.rimMesh.material.color.setHex(0x354336);
         p.rimMesh.material.emissive.setHex(0x000000);
         p.rimMesh.material.emissiveIntensity = 0;
-        p.discMesh.material.color.setHex(0x162216);
+        p.discMesh.material.color.setHex(0x151e16);
         p.targetY = p.baseY;
       }
     });
 
-    // Intensify core light pulse on tier switch
-    coreLight.intensity = 4.8;
-    setTimeout(() => { coreLight.intensity = 3.8; }, 350);
+    // Subtle light settle on tier switch
+    coreLight.intensity = 1.8;
+    setTimeout(() => { coreLight.intensity = 1.4; }, 350);
   };
 
   // Set default initial active tier to 1

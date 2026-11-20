@@ -232,8 +232,8 @@ function updateRadiusCircle() {
   const campus = getCampus();
   radiusLayer = L.circle([campus.lat, campus.lng], {
     radius: state.radiusKm * 1000,
-    color: "#e9c87b",
-    fillColor: "#e9c87b",
+    color: "#9ec094",
+    fillColor: "#9ec094",
     fillOpacity: 0.08,
     weight: 1.8,
     dashArray: "6, 8"
@@ -466,7 +466,7 @@ function renderInspector() {
     <div class="os-insp-stats">
       <div class="os-insp-stat">
         <small>From ${escapeHtml(campus.shortName.split(" ")[0])}</small>
-        <strong class="num is-gold">${distKm} km</strong>
+        <strong class="num is-accent">${distKm} km</strong>
       </div>
       <div class="os-insp-stat">
         <small>Open Slots</small>
@@ -497,7 +497,7 @@ function renderInspector() {
       <h4>Accepted Engineering &amp; Computing Programs</h4>
       <div class="os-tag-wrap">
         ${(company.programs || [])
-          .map(p => `<span class="os-prog-pill ${p === profProgram ? "is-match" : ""}">${escapeHtml(p)}</span>`)
+          .map(p => `<span class="os-prog-pill">${escapeHtml(p)}</span>`)
           .join("")}
       </div>
     </div>
@@ -939,9 +939,9 @@ function renderInventoryPane(body) {
     en: state.companies.filter(c => c.type === "Energy").length
   };
   const rings = [
-    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#e9c87b" },
-    { label: "Software & Telecom", pct: Math.round((counts.sw / totalCount) * 100), r: 31, color: "#a8d89a" },
-    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#f5f1e6" }
+    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#9ec094" },
+    { label: "Software & Telecom", pct: Math.round((counts.sw / totalCount) * 100), r: 31, color: "#f2f1ec" },
+    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#6d8474" }
   ];
 
   body.innerHTML = `
@@ -1116,7 +1116,7 @@ function renderProfilePane(body) {
     <div class="os-readiness-card">
       <div class="os-section-label" style="margin:0;">
         <span>Your Readiness</span>
-        <span id="os-readiness-pct" class="num" style="color:var(--gold-bright);">${pct}%</span>
+        <span id="os-readiness-pct" class="num" style="color:var(--accent);">${pct}%</span>
       </div>
       <div class="os-progress-track">
         <div class="os-progress-fill" id="os-readiness-fill" style="width:${pct}%;"></div>
