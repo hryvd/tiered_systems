@@ -1,7 +1,8 @@
 /**
  * TIERED SYSTEMS · Opportunity OS Controller
- * Full-bleed satellite map + liquid-glass HUD + Vinora analytics + AI Matcher
+ * Full-bleed satellite map + translucent cream glass HUD + Vinora analytics + AI Matcher
  */
+import "./glass-warp.js";
 import { CAMPUSES, DatabaseService } from "./database.js";
 
 const BASEMAPS = {
@@ -218,7 +219,7 @@ function updateCampusMarker() {
 
   campusMarker = L.marker([campus.lat, campus.lng], { icon })
     .addTo(map)
-    .bindPopup(`<strong>${escapeHtml(campus.name)}</strong><br><span style="font-size:12px;color:#dcdbd0;">Origin node for distance calculation</span>`);
+    .bindPopup(`<strong>${escapeHtml(campus.name)}</strong><br><span style="font-size:12px;color:var(--ink-secondary);">Origin node for distance calculation</span>`);
 }
 
 function updateRadiusCircle() {
@@ -232,8 +233,8 @@ function updateRadiusCircle() {
   const campus = getCampus();
   radiusLayer = L.circle([campus.lat, campus.lng], {
     radius: state.radiusKm * 1000,
-    color: "#9ec094",
-    fillColor: "#9ec094",
+    color: "#E8590C",
+    fillColor: "#E8590C",
     fillOpacity: 0.08,
     weight: 1.8,
     dashArray: "6, 8"
@@ -939,9 +940,9 @@ function renderInventoryPane(body) {
     en: state.companies.filter(c => c.type === "Energy").length
   };
   const rings = [
-    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#9ec094" },
-    { label: "Software & Telecom", pct: Math.round((counts.sw / totalCount) * 100), r: 31, color: "#f2f1ec" },
-    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#6d8474" }
+    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#E8590C" },
+    { label: "Software & Telecom", pct: Math.round((counts.sw / totalCount) * 100), r: 31, color: "#2b2b2b" },
+    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#8c7d70" }
   ];
 
   body.innerHTML = `
@@ -977,7 +978,7 @@ function renderInventoryPane(body) {
               const circ = 2 * Math.PI * ring.r;
               const dash = ((ring.pct / 100) * circ).toFixed(1);
               return `
-                <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7" />
+                <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="rgba(43,43,43,0.10)" stroke-width="7" />
                 <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="${ring.color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 54 54)" />
               `;
             })

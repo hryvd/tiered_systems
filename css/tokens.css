@@ -1,44 +1,49 @@
 /* ==========================================================================
    TIERED SYSTEMS · SHARED DESIGN TOKENS & BASE PRIMITIVES
-   Pure Flat Matte Smoked Glass · Zero Strokes · Zero Highlights · Zero Shadows
+   Flat Warm Cream (#fff8f0) · Burnt Orange (#E8590C) · Charcoal (#2b2b2b)
+   Zero Borders · Zero Shadows · Zero Highlights
    ========================================================================== */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Matte Olive-Obsidian Tonal Steps */
-  --surface-base: #0b100c;
-  --surface-elevated: #111812;
-  --surface-card: #162017;
-  --surface-card-hover: #1e2a1f;
-  --surface-control: #223024;
-  --surface-divider: rgba(232, 238, 228, 0.08);
+  /* Warm Cream Surfaces & Lower-Opacity Glass */
+  --surface-base: #fff8f0;
+  --surface-elevated: #f4eadf;
+  --surface-card: rgba(255, 248, 240, 0.58);
+  --surface-card-solid: #f0e5d8;
+  --surface-card-hover: rgba(43, 43, 43, 0.09);
+  --surface-control: rgba(43, 43, 43, 0.075);
+  --surface-divider: rgba(43, 43, 43, 0.10);
 
-  /* Smoked Frosted Glass Surfaces */
-  --glass-bg: rgba(14, 21, 15, 0.84);
-  --glass-bg-dense: rgba(12, 18, 13, 0.94);
-  --glass-pill: rgba(19, 28, 20, 0.84);
-  --glass-blur: 20px;
+  /* Translucent Glass Containers */
+  --glass-bg: rgba(255, 248, 240, 0.56);
+  --glass-bg-dense: rgba(255, 248, 240, 0.74);
+  --glass-pill: rgba(255, 248, 240, 0.60);
+  --glass-blur: 14px;
 
-  /* Ink Hierarchy */
-  --ink-primary: #f4f5f2;
-  --ink-secondary: #c5cdc2;
-  --ink-muted: #889485;
-  --ink-dark: #0d130e;
+  /* Charcoal Text & Mini Element Hierarchy */
+  --ink-primary: #2b2b2b;
+  --ink-secondary: #4a4845;
+  --ink-muted: #6e6a65;
+  --ink-on-dark: #fff8f0;
 
-  /* Flat Matte Botanical Sage Accent & High-Contrast Ivory CTA */
-  --accent: #9ec094;
-  --accent-hover: #b2cfa9;
-  --accent-subtle: rgba(158, 192, 148, 0.14);
+  --mini-dark: #2b2b2b;
+  --mini-dark-hover: #3d3d3d;
 
-  --cta-bg: #f2f1ec;
-  --cta-hover: #dfe3db;
+  /* Burnt Orange Accent & Primary CTA */
+  --accent: #E8590C;
+  --accent-hover: #cf4e09;
+  --accent-subtle: rgba(232, 89, 12, 0.12);
+
+  --cta-bg: #E8590C;
+  --cta-hover: #cf4e09;
 
   /* Semantic Status */
-  --status-ok: #8ec284;
-  --status-ok-bg: rgba(142, 194, 132, 0.14);
-  --status-full: #d9827b;
-  --status-full-bg: rgba(217, 130, 123, 0.14);
+  --status-ok: #1f7a4c;
+  --status-ok-bg: rgba(31, 122, 76, 0.12);
+  --status-full: #c93b2b;
+  --status-full-bg: rgba(201, 59, 43, 0.12);
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -117,7 +122,7 @@ button, input, select, a {
   left: 16px;
   z-index: 3000;
   background: var(--cta-bg);
-  color: var(--ink-dark);
+  color: var(--ink-on-dark);
   padding: 10px 18px;
   border-radius: var(--radius-pill);
   font-weight: 700;

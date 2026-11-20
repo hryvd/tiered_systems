@@ -28,48 +28,45 @@
   const masterGroup = new THREE.Group();
   scene.add(masterGroup);
 
-  // Lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+  // Soft Warm-Neutral Studio Lighting (#fff8f0 / #E8590C / #2b2b2b)
+  const ambientLight = new THREE.AmbientLight(0xfff8f0, 0.72);
   scene.add(ambientLight);
 
-  // Neutral Soft Key & Fill Lighting (No Gold/Orange Blooms)
-  const coreLight = new THREE.PointLight(0x9ec094, 1.4, 12, 1.4);
+  const coreLight = new THREE.PointLight(0xe8590c, 1.3, 12, 1.4);
   coreLight.position.set(0, 0.2, 0);
   masterGroup.add(coreLight);
 
-  // Key light for clean matte specular definition
-  const keyLight = new THREE.DirectionalLight(0xf4f5f2, 2.0);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
   keyLight.position.set(6, 6, 7);
   scene.add(keyLight);
 
-  // Subtle sage rim light for edge separation
-  const rimLight = new THREE.DirectionalLight(0x9ec094, 1.5);
+  const rimLight = new THREE.DirectionalLight(0xfff8f0, 1.4);
   rimLight.position.set(-6, -4, -4);
   scene.add(rimLight);
 
   // Materials
-  // 1. Matte Anodized Silver-Sage Metallic (Official Tiered System Emblem)
+  // 1. Matte Brushed Dark Charcoal Bands
   const bronzeEmblemMat = new THREE.MeshStandardMaterial({
-    color: 0xcad4c6,
-    metalness: 0.72,
-    roughness: 0.36,
-    envMapIntensity: 1.1
+    color: 0x3d3a37,
+    metalness: 0.62,
+    roughness: 0.38,
+    envMapIntensity: 1.0
   });
 
-  // 2. Dark Olive-Obsidian Beveled Chassis Material (Background Squircles)
+  // 2. Charcoal Beveled Chassis Tiles
   const chassisTileMat = new THREE.MeshStandardMaterial({
-    color: 0x151e16,
-    metalness: 0.55,
-    roughness: 0.52
+    color: 0x2b2b2b,
+    metalness: 0.35,
+    roughness: 0.58
   });
 
-  // 3. Matte Sage Core Sphere Material
+  // 3. Burnt Orange Core Sphere Material (#E8590C)
   const coreGlowMat = new THREE.MeshStandardMaterial({
-    color: 0x9ec094,
-    emissive: 0x4f7149,
-    emissiveIntensity: 0.35,
-    metalness: 0.45,
-    roughness: 0.4
+    color: 0xe8590c,
+    emissive: 0xe8590c,
+    emissiveIntensity: 0.25,
+    metalness: 0.3,
+    roughness: 0.42
   });
 
   // --- 1. Background Matrix of Squircle Chassis Tiles (From CURSOR Poster) ---
@@ -162,12 +159,12 @@
     platformGroup.position.y = cfg.yPos;
     masterGroup.add(platformGroup);
 
-    // Dark metallic disc platform
+    // Dark charcoal disc platform
     const discGeo = new THREE.CylinderGeometry(cfg.radius, cfg.radius * 1.04, 0.06, 48);
     const discMat = new THREE.MeshStandardMaterial({
-      color: 0x151e16,
-      metalness: 0.55,
-      roughness: 0.52
+      color: 0x2b2b2b,
+      metalness: 0.35,
+      roughness: 0.58
     });
     const discMesh = new THREE.Mesh(discGeo, discMat);
     platformGroup.add(discMesh);
@@ -175,11 +172,11 @@
     // Matte perimeter circuit rim
     const rimGeo = new THREE.TorusGeometry(cfg.radius * 1.02, 0.035, 16, 64);
     const rimMat = new THREE.MeshStandardMaterial({
-      color: 0x354336,
+      color: 0x4a4845,
       emissive: 0x000000,
       emissiveIntensity: 0,
-      metalness: 0.5,
-      roughness: 0.35
+      metalness: 0.35,
+      roughness: 0.45
     });
     const rimMesh = new THREE.Mesh(rimGeo, rimMat);
     rimMesh.rotation.x = Math.PI / 2;
@@ -211,10 +208,10 @@
   }
   particleGeo.setAttribute("position", new THREE.BufferAttribute(particlePos, 3));
   const particleMat = new THREE.PointsMaterial({
-    color: 0xcad4c6,
+    color: 0x2b2b2b,
     size: 0.045,
     transparent: true,
-    opacity: 0.45
+    opacity: 0.32
   });
   const particles = new THREE.Points(particleGeo, particleMat);
   masterGroup.add(particles);
@@ -293,29 +290,29 @@
     tierPlatforms.forEach((p) => {
       const match = p.tier === tierNum;
       if (match) {
-        // Matte Botanical Sage active tier rim (no bloom)
-        p.rimMesh.material.color.setHex(0x9ec094);
-        p.rimMesh.material.emissive.setHex(0x4f7149);
-        p.rimMesh.material.emissiveIntensity = 0.35;
-        p.discMesh.material.color.setHex(0x1f2c20);
+        // Flat Burnt Orange active tier rim (#E8590C)
+        p.rimMesh.material.color.setHex(0xe8590c);
+        p.rimMesh.material.emissive.setHex(0xe8590c);
+        p.rimMesh.material.emissiveIntensity = 0.25;
+        p.discMesh.material.color.setHex(0x3a3734);
         p.targetY = p.baseY + 0.14; // Slightly elevate active tier platform
 
         if (indicatorEl) {
           indicatorEl.textContent = p.label;
         }
       } else {
-        // Inactive tiers stay matte olive-obsidian
-        p.rimMesh.material.color.setHex(0x354336);
+        // Inactive tiers stay matte charcoal
+        p.rimMesh.material.color.setHex(0x4a4845);
         p.rimMesh.material.emissive.setHex(0x000000);
         p.rimMesh.material.emissiveIntensity = 0;
-        p.discMesh.material.color.setHex(0x151e16);
+        p.discMesh.material.color.setHex(0x2b2b2b);
         p.targetY = p.baseY;
       }
     });
 
     // Subtle light settle on tier switch
-    coreLight.intensity = 1.8;
-    setTimeout(() => { coreLight.intensity = 1.4; }, 350);
+    coreLight.intensity = 1.6;
+    setTimeout(() => { coreLight.intensity = 1.3; }, 350);
   };
 
   // Set default initial active tier to 1
