@@ -77,7 +77,7 @@
   const feDisp = document.createElementNS(svgNS, "feDisplacementMap");
   feDisp.setAttribute("in", "SourceGraphic");
   feDisp.setAttribute("in2", "warpMap");
-  feDisp.setAttribute("scale", "16");
+  feDisp.setAttribute("scale", "22");
   feDisp.setAttribute("xChannelSelector", "R");
   feDisp.setAttribute("yChannelSelector", "G");
 

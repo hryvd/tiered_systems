@@ -219,7 +219,7 @@ function updateCampusMarker() {
 
   campusMarker = L.marker([campus.lat, campus.lng], { icon })
     .addTo(map)
-    .bindPopup(`<strong>${escapeHtml(campus.name)}</strong><br><span style="font-size:12px;color:var(--ink-secondary);">Origin node for distance calculation</span>`);
+    .bindPopup(`<strong>${escapeHtml(campus.name)}</strong><br><span style="font-size:12px;color:var(--os-ink-sub);">Origin node for distance calculation</span>`);
 }
 
 function updateRadiusCircle() {
@@ -940,9 +940,9 @@ function renderInventoryPane(body) {
     en: state.companies.filter(c => c.type === "Energy").length
   };
   const rings = [
-    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#E8590C" },
-    { label: "Software & Telecom", pct: Math.round((counts.sw / totalCount) * 100), r: 31, color: "#2b2b2b" },
-    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#8c7d70" }
+    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#0b0b0d" },
+    { label: "Software & Telecom", pct: Math.round((counts.sw / totalCount) * 100), r: 31, color: "#E8590C" },
+    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#686870" }
   ];
 
   body.innerHTML = `
@@ -978,7 +978,7 @@ function renderInventoryPane(body) {
               const circ = 2 * Math.PI * ring.r;
               const dash = ((ring.pct / 100) * circ).toFixed(1);
               return `
-                <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="rgba(43,43,43,0.10)" stroke-width="7" />
+                <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="rgba(11,11,13,0.12)" stroke-width="7" />
                 <circle cx="54" cy="54" r="${ring.r}" fill="none" stroke="${ring.color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 54 54)" />
               `;
             })

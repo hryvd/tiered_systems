@@ -148,8 +148,36 @@
     setInterval(update, 30 * 1000);
   }
 
-  /* Flat Card Mode (No 3D Perspective Tilt) ------------------------------ */
-  function init3DTilt() {}
+  /* Restrained Interactive 3D Card Tilt (Fine Pointer Desktop Only) -------- */
+  function init3DTilt() {
+    if (reduceMotion || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const cards = document.querySelectorAll(".js-tilt");
+
+    cards.forEach(card => {
+      const maxTilt = Math.min((parseFloat(card.dataset.tiltMax) || 4) * 0.45, 2.5);
+
+      function onMouseMove(e) {
+        const rect = card.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const rotateX = ((y - centerY) / centerY) * -maxTilt;
+        const rotateY = ((x - centerX) / centerX) * maxTilt;
+
+        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.004, 1.004, 1.004)`;
+      }
+
+      function onMouseLeave() {
+        card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+      }
+
+      card.addEventListener("mousemove", onMouseMove);
+      card.addEventListener("mouseleave", onMouseLeave);
+    });
+  }
 
   /* Animated Number Counter Tickers -------------------------------------- */
   function initCounters() {

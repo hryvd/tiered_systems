@@ -28,45 +28,45 @@
   const masterGroup = new THREE.Group();
   scene.add(masterGroup);
 
-  // Soft Warm-Neutral Studio Lighting (#fff8f0 / #E8590C / #2b2b2b)
-  const ambientLight = new THREE.AmbientLight(0xfff8f0, 0.72);
+  // Neutral White Studio Lighting on Obsidian Black (#09090b / #E8590C)
+  const ambientLight = new THREE.AmbientLight(0xf4f4f6, 0.55);
   scene.add(ambientLight);
 
-  const coreLight = new THREE.PointLight(0xe8590c, 1.3, 12, 1.4);
+  const coreLight = new THREE.PointLight(0xe8590c, 1.5, 12, 1.3);
   coreLight.position.set(0, 0.2, 0);
   masterGroup.add(coreLight);
 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
   keyLight.position.set(6, 6, 7);
   scene.add(keyLight);
 
-  const rimLight = new THREE.DirectionalLight(0xfff8f0, 1.4);
+  const rimLight = new THREE.DirectionalLight(0xf4f4f6, 1.6);
   rimLight.position.set(-6, -4, -4);
   scene.add(rimLight);
 
   // Materials
-  // 1. Matte Brushed Dark Charcoal Bands
+  // 1. Matte Brushed Silver-White Bands
   const bronzeEmblemMat = new THREE.MeshStandardMaterial({
-    color: 0x3d3a37,
-    metalness: 0.62,
-    roughness: 0.38,
-    envMapIntensity: 1.0
+    color: 0xe5e5ea,
+    metalness: 0.72,
+    roughness: 0.32,
+    envMapIntensity: 1.15
   });
 
-  // 2. Charcoal Beveled Chassis Tiles
+  // 2. Dark Obsidian Beveled Chassis Tiles
   const chassisTileMat = new THREE.MeshStandardMaterial({
-    color: 0x2b2b2b,
-    metalness: 0.35,
-    roughness: 0.58
+    color: 0x16161a,
+    metalness: 0.45,
+    roughness: 0.52
   });
 
   // 3. Burnt Orange Core Sphere Material (#E8590C)
   const coreGlowMat = new THREE.MeshStandardMaterial({
     color: 0xe8590c,
     emissive: 0xe8590c,
-    emissiveIntensity: 0.25,
+    emissiveIntensity: 0.35,
     metalness: 0.3,
-    roughness: 0.42
+    roughness: 0.38
   });
 
   // --- 1. Background Matrix of Squircle Chassis Tiles (From CURSOR Poster) ---
@@ -159,12 +159,12 @@
     platformGroup.position.y = cfg.yPos;
     masterGroup.add(platformGroup);
 
-    // Dark charcoal disc platform
+    // Dark obsidian disc platform
     const discGeo = new THREE.CylinderGeometry(cfg.radius, cfg.radius * 1.04, 0.06, 48);
     const discMat = new THREE.MeshStandardMaterial({
-      color: 0x2b2b2b,
-      metalness: 0.35,
-      roughness: 0.58
+      color: 0x16161a,
+      metalness: 0.45,
+      roughness: 0.52
     });
     const discMesh = new THREE.Mesh(discGeo, discMat);
     platformGroup.add(discMesh);
@@ -172,11 +172,11 @@
     // Matte perimeter circuit rim
     const rimGeo = new THREE.TorusGeometry(cfg.radius * 1.02, 0.035, 16, 64);
     const rimMat = new THREE.MeshStandardMaterial({
-      color: 0x4a4845,
+      color: 0x383840,
       emissive: 0x000000,
       emissiveIntensity: 0,
-      metalness: 0.35,
-      roughness: 0.45
+      metalness: 0.4,
+      roughness: 0.4
     });
     const rimMesh = new THREE.Mesh(rimGeo, rimMat);
     rimMesh.rotation.x = Math.PI / 2;
@@ -208,10 +208,10 @@
   }
   particleGeo.setAttribute("position", new THREE.BufferAttribute(particlePos, 3));
   const particleMat = new THREE.PointsMaterial({
-    color: 0x2b2b2b,
+    color: 0xd4d4d8,
     size: 0.045,
     transparent: true,
-    opacity: 0.32
+    opacity: 0.42
   });
   const particles = new THREE.Points(particleGeo, particleMat);
   masterGroup.add(particles);
@@ -293,26 +293,26 @@
         // Flat Burnt Orange active tier rim (#E8590C)
         p.rimMesh.material.color.setHex(0xe8590c);
         p.rimMesh.material.emissive.setHex(0xe8590c);
-        p.rimMesh.material.emissiveIntensity = 0.25;
-        p.discMesh.material.color.setHex(0x3a3734);
+        p.rimMesh.material.emissiveIntensity = 0.35;
+        p.discMesh.material.color.setHex(0x222228);
         p.targetY = p.baseY + 0.14; // Slightly elevate active tier platform
 
         if (indicatorEl) {
           indicatorEl.textContent = p.label;
         }
       } else {
-        // Inactive tiers stay matte charcoal
-        p.rimMesh.material.color.setHex(0x4a4845);
+        // Inactive tiers stay matte obsidian
+        p.rimMesh.material.color.setHex(0x383840);
         p.rimMesh.material.emissive.setHex(0x000000);
         p.rimMesh.material.emissiveIntensity = 0;
-        p.discMesh.material.color.setHex(0x2b2b2b);
+        p.discMesh.material.color.setHex(0x16161a);
         p.targetY = p.baseY;
       }
     });
 
     // Subtle light settle on tier switch
-    coreLight.intensity = 1.6;
-    setTimeout(() => { coreLight.intensity = 1.3; }, 350);
+    coreLight.intensity = 1.8;
+    setTimeout(() => { coreLight.intensity = 1.5; }, 350);
   };
 
   // Set default initial active tier to 1
