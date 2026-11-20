@@ -128,6 +128,31 @@ a { color: inherit; }
 
 .nav-actions { display: inline-flex; align-items: center; gap: 10px; }
 
+.nav-cta {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-4px) scale(0.96);
+  transition:
+    opacity 220ms var(--ease-spring),
+    transform 240ms var(--ease-spring),
+    visibility 0ms linear 220ms,
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+.nav-cta.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity 240ms var(--ease-spring),
+    transform 260ms var(--ease-spring),
+    visibility 0ms linear 0ms,
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+
 .nav-menu-toggle {
   display: none;
   width: 42px;
@@ -549,7 +574,41 @@ a { color: inherit; }
   .brand-mark { width: 16px; height: 16px; }
   .brand-word { font-size: 0.72rem; letter-spacing: 0.08em; white-space: nowrap; }
   .nav-actions { gap: 8px; flex-shrink: 0; }
-  .nav-cta { padding-inline: 12px; font-size: 0.75rem; min-height: 36px; white-space: nowrap; }
+  .nav-cta {
+    padding-inline: 12px;
+    font-size: 0.75rem;
+    min-height: 36px;
+    white-space: nowrap;
+    max-width: 240px;
+    transition:
+      opacity 220ms var(--ease-spring),
+      transform 240ms var(--ease-spring),
+      max-width 220ms var(--ease-spring),
+      padding 220ms var(--ease-spring),
+      margin 220ms var(--ease-spring),
+      visibility 0ms linear 220ms,
+      background var(--dur-fast) ease,
+      color var(--dur-fast) ease;
+  }
+  .nav-cta:not(.is-visible) {
+    max-width: 0;
+    padding-inline: 0;
+    margin-right: -8px;
+    overflow: hidden;
+  }
+  .nav-cta.is-visible {
+    max-width: 240px;
+    margin-right: 0;
+    transition:
+      opacity 240ms var(--ease-spring),
+      transform 260ms var(--ease-spring),
+      max-width 240ms var(--ease-spring),
+      padding 240ms var(--ease-spring),
+      margin 240ms var(--ease-spring),
+      visibility 0ms linear 0ms,
+      background var(--dur-fast) ease,
+      color var(--dur-fast) ease;
+  }
   .nav-menu-toggle { width: 38px; height: 38px; }
   .frame-bar { flex-wrap: wrap; gap: 6px; }
   .hero { padding-block: 44px 56px; }

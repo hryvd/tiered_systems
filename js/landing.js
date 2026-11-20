@@ -77,6 +77,47 @@
     });
   }
 
+  /* Show navbar Opportunity Radar CTA only when no in-page CTA is visible */
+  function initNavCtaVisibility() {
+    const navCta = document.querySelector("#nav .nav-cta");
+    if (!navCta) return;
+
+    const pageCtas = Array.from(document.querySelectorAll("main a[data-os-launch]"));
+
+    const setVisible = show => {
+      navCta.classList.toggle("is-visible", show);
+      navCta.setAttribute("aria-hidden", String(!show));
+      navCta.tabIndex = show ? 0 : -1;
+    };
+
+    if (!pageCtas.length || !("IntersectionObserver" in window)) {
+      setVisible(true);
+      return;
+    }
+
+    const navHeight = document.getElementById("nav")?.offsetHeight || 70;
+    const isInView = el => {
+      const r = el.getBoundingClientRect();
+      return r.bottom > navHeight && r.top < window.innerHeight;
+    };
+
+    const visibleCtas = new Set(pageCtas.filter(isInView));
+    setVisible(visibleCtas.size === 0);
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) visibleCtas.add(entry.target);
+          else visibleCtas.delete(entry.target);
+        });
+        setVisible(visibleCtas.size === 0);
+      },
+      { rootMargin: `-${navHeight}px 0px 0px 0px`, threshold: 0.05 }
+    );
+
+    pageCtas.forEach(cta => observer.observe(cta));
+  }
+
   /* Live event status ---------------------------------------------------- */
   function initEventStatus() {
     const statusEl = document.getElementById("event-status");
@@ -445,6 +486,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initNav();
+    initNavCtaVisibility();
     initEventStatus();
     init3DTilt();
     initCounters();
