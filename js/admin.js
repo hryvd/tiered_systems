@@ -4,6 +4,7 @@
  * and local custom MOA partner entries with no login gate.
  */
 import "./glass-warp.js";
+import "./os-transition.js";
 import { DatabaseService } from "./database.js";
 
 const adminState = {

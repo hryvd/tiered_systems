@@ -1224,6 +1224,23 @@ async function loadDirectory() {
   fitAllPins();
 }
 
+function initLaunchArrival() {
+  const root = document.documentElement;
+  if (!root.classList.contains("os-launch-entering")) return;
+  try {
+    sessionStorage.removeItem("ts_os_launch_morph");
+  } catch (_) {}
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      root.classList.remove("os-launch-entering");
+      root.classList.add("os-launch-settling");
+      window.setTimeout(() => {
+        root.classList.remove("os-launch-settling");
+      }, 760);
+    });
+  });
+}
+
 /* Boot & Event Bindings -------------------------------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
   state.basemap = state.prefs.basemap || "satellite";
@@ -1233,6 +1250,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initMap();
   syncHudAttributes();
+  initLaunchArrival();
   loadDirectory();
 
   /* Search & Category Pills */

@@ -20,6 +20,27 @@
   <!-- Shared Design Tokens & Opportunity OS Stylesheet -->
   <link rel="stylesheet" href="./css/tokens.css" />
   <link rel="stylesheet" href="./css/os.css" />
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem("ts_os_launch_morph");
+        if (!raw) return;
+        var data = JSON.parse(raw);
+        if (!data || Date.now() - data.ts > 4500) {
+          sessionStorage.removeItem("ts_os_launch_morph");
+          return;
+        }
+        if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          sessionStorage.removeItem("ts_os_launch_morph");
+          return;
+        }
+        document.documentElement.classList.add("os-launch-entering");
+        window.setTimeout(function () {
+          document.documentElement.classList.remove("os-launch-entering");
+        }, 2200);
+      } catch (_) {}
+    })();
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#os-search-input">Skip to partner search</a>
