@@ -5,7 +5,7 @@
  */
 import "./glass-warp.js";
 import "./os-transition.js";
-import { DatabaseService } from "./database.js";
+import { DatabaseService, downloadCompaniesCsv, filingStatus, formatAgreementDate, hasCoordinates } from "./database.js";
 
 const adminState = {
   companies: [],
@@ -41,8 +41,7 @@ function formatSourceLabel(source) {
   const labels = {
     "google-sheets": "Google Sheets",
     "cached-sheet": "Cached Sheet",
-    "json-file": "Repository JSON",
-    "embedded-local": "Embedded Local"
+    "json-file": "F2F MOA register"
   };
   return labels[source] || "Local Store";
 }
@@ -64,13 +63,12 @@ function syncPreferenceControls() {
 function renderSummary() {
   const totalEl = document.getElementById("admin-kpi-total");
   const customEl = document.getElementById("admin-kpi-custom");
-  const slotsEl = document.getElementById("admin-kpi-slots");
+  const mappedEl = document.getElementById("admin-kpi-mapped");
   const sourceEl = document.getElementById("admin-kpi-source");
 
-  const totalSlots = adminState.companies.reduce((sum, c) => sum + (Number(c.slots) || 0), 0);
-  if (totalEl) totalEl.textContent = String(adminState.companies.length);
+  if (totalEl) totalEl.textContent = adminState.companies.length.toLocaleString();
   if (customEl) customEl.textContent = String(adminState.customIds.size);
-  if (slotsEl) slotsEl.textContent = String(totalSlots);
+  if (mappedEl) mappedEl.textContent = adminState.companies.filter(hasCoordinates).length.toLocaleString();
   if (sourceEl) sourceEl.textContent = formatSourceLabel(adminState.source);
 }
 
@@ -89,6 +87,8 @@ function renderDirectoryTable() {
       c.hub,
       c.address,
       c.moaRef,
+      c.moaStatus,
+      c.registerNumber,
       ...(c.programs || [])
     ]
       .join(" ")
@@ -97,7 +97,7 @@ function renderDirectoryTable() {
   });
 
   if (countEl) {
-    countEl.textContent = `${visible.length} of ${adminState.companies.length} partners shown`;
+    countEl.textContent = `${visible.length} of ${adminState.companies.length} agreements shown`;
   }
 
   if (visible.length === 0) {
@@ -108,21 +108,20 @@ function renderDirectoryTable() {
   tbody.innerHTML = visible
     .map(c => {
       const isCustom = adminState.customIds.has(c.id);
-      const programsText = (c.programs || []).join(", ") || "—";
-      const slotsVal = Number(c.slots) || 0;
-      const sectorHub = `${c.type || "Partner"} · ${c.hub || "Batangas"}`;
+      const registerEntry = Boolean(c.registerNumber);
+      const origin = isCustom ? "Custom Local" : registerEntry ? "F2F Register" : "Google Sheets";
       return `
         <tr>
           <td class="admin-cell-partner" data-label="Partner">
             <span class="admin-partner-name">${escapeHtml(c.name)}</span>
-            <span class="admin-partner-addr">${escapeHtml(c.address || "")}</span>
+            <span class="admin-partner-addr">${escapeHtml(c.address || (registerEntry ? `Register № ${c.registerNumber}` : ""))}</span>
           </td>
-          <td data-label="Sector &amp; Hub">${escapeHtml(sectorHub)}</td>
-          <td class="num" data-label="Programs">${escapeHtml(programsText)}</td>
-          <td class="num" data-label="Slots">${slotsVal > 0 ? `${slotsVal} open` : "Full"}</td>
+          <td data-label="Filing status">${escapeHtml(filingStatus(c))}</td>
+          <td class="num" data-label="Date signed">${escapeHtml(formatAgreementDate(c.signedOn))}</td>
+          <td class="num" data-label="Contract end">${escapeHtml(formatAgreementDate(c.endsOn))}</td>
           <td data-label="Origin">
             <span class="admin-origin-pill ${isCustom ? "is-custom" : ""}">
-              ${isCustom ? "Custom Local" : "Verified Base"}
+              ${origin}
             </span>
           </td>
           <td class="t-right" data-label="Action">
@@ -153,7 +152,7 @@ async function loadDirectory() {
 
   const res = await DatabaseService.loadCompanies();
   adminState.companies = res.companies || [];
-  adminState.source = res.source || "embedded-local";
+  adminState.source = res.source || "local";
 
   if (res.error) {
     showToast(res.error, true);
@@ -164,39 +163,7 @@ async function loadDirectory() {
 }
 
 function exportDirectoryCSV() {
-  const header = "id,name,category,type,hub,address,lat,lng,moaStatus,moaRef,programs,accepts,workSetup,hasAllowance,allowanceDesc,slots,moaCoordinator,contactEmail\n";
-  const rows = adminState.companies
-    .map(c =>
-      [
-        `"${c.id || ""}"`,
-        `"${(c.name || "").replace(/"/g, '""')}"`,
-        `"${(c.category || "").replace(/"/g, '""')}"`,
-        `"${c.type || ""}"`,
-        `"${c.hub || ""}"`,
-        `"${(c.address || "").replace(/"/g, '""')}"`,
-        c.lat,
-        c.lng,
-        `"${c.moaStatus || ""}"`,
-        `"${c.moaRef || ""}"`,
-        `"${(c.programs || []).join(";")}"`,
-        `"${(c.accepts || []).join(";")}"`,
-        `"${c.workSetup || "On-Site"}"`,
-        c.hasAllowance ? "true" : "false",
-        `"${(c.allowanceDesc || "").replace(/"/g, '""')}"`,
-        c.slots || 0,
-        `"${(c.moaCoordinator || "").replace(/"/g, '""')}"`,
-        `"${c.contactEmail || ""}"`
-      ].join(",")
-    )
-    .join("\n");
-
-  const blob = new Blob([header + rows + "\n"], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `Tiered_Systems_Admin_Directory_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCompaniesCsv(adminState.companies, "Admin_Directory");
 }
 
 document.addEventListener("DOMContentLoaded", () => {

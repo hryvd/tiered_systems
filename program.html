@@ -6,12 +6,12 @@
   <title>Tiered Systems: Engineering Your Next Level · CURSOR BatStateU</title>
   <meta name="description" content="A two-day career readiness program for Computer Engineering students at BatStateU Alangilan. Four tiers: Prepare, Level Up, Discover, Connect. November 18 &amp; 25, 2026." />
   <meta property="og:title" content="Tiered Systems: Engineering Your Next Level" />
-  <meta property="og:description" content="Resume and portfolio workshops, an industry plenary, an alumni panel, and an interactive liquid-glass map of MOA partner companies. Nov 18 &amp; 25, 2026." />
+  <meta property="og:description" content="Resume and portfolio workshops, an industry plenary, an alumni panel, and an interactive directory of OJT partner agreements. Nov 18 &amp; 25, 2026." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#09090b" />
 
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <!-- Google Fonts: Inter & Geist Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -78,7 +78,7 @@
           <h1 class="hero-title">Find the work that moves you forward.</h1>
 
           <p class="hero-lede">
-            A living career operating system for BatStateU engineers. Discover verified partner companies, compare open placements, and turn your next move into a clear path.
+            A career readiness program for BatStateU engineers. Develop your portfolio, learn from industry and alumni, and discover partners for face-to-face OJT.
           </p>
 
           <div class="hero-actions">
@@ -95,24 +95,20 @@
           </p>
         </div>
 
-        <!-- Live Map Preview Frame -->
-        <a href="./index.html" class="product-frame js-tilt" aria-label="Open Opportunity Radar live satellite map" data-tilt-max="7">
+        <!-- Opportunity Radar Preview -->
+        <a href="./index.html" class="product-frame js-tilt" aria-label="Open Opportunity Radar" data-tilt-max="5">
           <div class="frame-bar">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span class="status-dot-mini" aria-hidden="true"></span>
-              <span class="frame-title">Opportunity Radar</span>
-            </div>
-            <span class="frame-meta num" id="preview-count">— partners</span>
+            <span class="frame-title"><span class="status-dot-mini" aria-hidden="true"></span>Opportunity Radar</span>
+            <span class="frame-meta num" id="preview-count">— mapped partners</span>
           </div>
           <div class="frame-body">
             <div class="preview-map-wrap">
               <div id="preview-map" class="preview-map" aria-hidden="true"></div>
-              <div class="map-skeleton" id="map-skeleton" aria-hidden="true"></div>
+              <div class="map-skeleton" id="map-skeleton"><span>Map preview unavailable</span></div>
             </div>
-            <ol class="preview-list" id="preview-list" aria-label="Nearest partner companies to Alangilan campus">
+            <ol class="preview-list" id="preview-list" aria-label="Mapped companies by distance from the selected campus">
               <li class="preview-item is-loading"><span class="sk sk-w70"></span><span class="sk sk-w30"></span></li>
               <li class="preview-item is-loading"><span class="sk sk-w60"></span><span class="sk sk-w30"></span></li>
-              <li class="preview-item is-loading"><span class="sk sk-w80"></span><span class="sk sk-w30"></span></li>
             </ol>
           </div>
         </a>
@@ -123,20 +119,20 @@
     <section class="facts" aria-label="Program at a glance">
       <div class="container facts-grid">
         <div class="fact">
-          <span class="fact-value num js-counter" data-target="4">0</span>
+          <span class="fact-value num js-counter" data-target="4">4</span>
           <span class="fact-label">calibrated tiers</span>
         </div>
         <div class="fact">
-          <span class="fact-value num js-counter" data-target="2">0</span>
+          <span class="fact-value num js-counter" data-target="2">2</span>
           <span class="fact-label">afternoons, 1:00–5:00 PM</span>
         </div>
         <div class="fact">
-          <span class="fact-value num js-counter" id="fact-partners" data-target="16">0</span>
-          <span class="fact-label">MOA partner companies</span>
+          <span class="fact-value num" id="fact-partners">—</span>
+          <span class="fact-label">MOA records</span>
         </div>
         <div class="fact">
-          <span class="fact-value num js-counter" id="fact-slots" data-target="126">0</span>
-          <span class="fact-label">open OJT &amp; hiring slots</span>
+          <span class="fact-value num" id="fact-slots">—</span>
+          <span class="fact-label">notarized MOAs</span>
         </div>
       </div>
     </section>
@@ -147,44 +143,55 @@
         <div class="emblem-copy">
           <h2 id="emblem-showcase-title" class="section-title">Four tiers to engineering career readiness.</h2>
           <p class="section-lede">
-            Organized by CURSOR at BatStateU Alangilan. Each tier represents a verified milestone—advancing Computer Engineering students from technical resume calibration to direct company placement on the Opportunity Radar.
+            Organized by CURSOR at BatStateU Alangilan. Each tier builds on the previous one, from the technical resume workshop to exploring OJT partner agreements in the Opportunity Radar.
           </p>
 
-          <div class="tier-stages-list" role="tablist" aria-label="Progression tiers">
-            <button type="button" class="tier-stage-btn active" data-stage-tier="1">
+          <div class="tier-stages-list" role="group" aria-label="Select a progression tier">
+            <button type="button" class="tier-stage-btn active" data-stage-tier="1" aria-pressed="true">
               <span class="stage-num num">T1</span>
               <div>
                 <strong>Tier 01: Prepare</strong>
                 <p>Technical resume overhaul &amp; verifiable project artifact (code, circuit, CAD).</p>
               </div>
             </button>
-            <button type="button" class="tier-stage-btn" data-stage-tier="2">
+            <button type="button" class="tier-stage-btn" data-stage-tier="2" aria-pressed="false">
               <span class="stage-num num">T2</span>
               <div>
                 <strong>Tier 02: Level Up</strong>
                 <p>LinkedIn digital architecture &amp; 45-second technical elevator pitch.</p>
               </div>
             </button>
-            <button type="button" class="tier-stage-btn" data-stage-tier="3">
+            <button type="button" class="tier-stage-btn" data-stage-tier="3" aria-pressed="false">
               <span class="stage-num num">T3</span>
               <div>
                 <strong>Tier 03: Discover</strong>
                 <p>Industry plenary address &amp; alumni engineering career benchmarks.</p>
               </div>
             </button>
-            <button type="button" class="tier-stage-btn" data-stage-tier="4">
+            <button type="button" class="tier-stage-btn" data-stage-tier="4" aria-pressed="false">
               <span class="stage-num num">T4</span>
               <div>
                 <strong>Tier 04: Connect</strong>
-                <p>Active MOA Opportunity Radar station &amp; partner company matching.</p>
+                <p>Opportunity Radar station &amp; OJT partner company matching.</p>
               </div>
             </button>
           </div>
         </div>
 
-        <div class="emblem-canvas-wrap js-tilt" data-tilt-max="5">
-          <div id="emblem-3d-canvas" class="emblem-3d-canvas" aria-label="Interactive 3D model of the Tiered System emblem and 4 progression tiers"></div>
-          <div class="canvas-tier-indicator">
+        <div class="emblem-canvas-wrap">
+          <div class="emblem-stage">
+            <div class="emblem-tiles" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div id="emblem-3d-canvas" class="emblem-3d-canvas" role="img" aria-label="Gold open-globe Tiered Systems emblem">
+              <img class="emblem-fallback" src="./assets/tier-emblem.avif" alt="" aria-hidden="true" />
+            </div>
+          </div>
+          <div class="canvas-tier-indicator" aria-live="polite">
             <span class="tier-indicator-pill">
               <span class="indicator-dot" aria-hidden="true"></span>
               <span class="indicator-text" id="indicator-tier-name">Tier 01: Prepare · Resume &amp; Project Artifact</span>
@@ -200,7 +207,7 @@
         <div class="section-head">
           <h2 id="tiers-title" class="section-title">Four progressive tiers. Each one unlocks the next.</h2>
           <p class="section-lede">
-            Day 1 builds your professional artifacts. Day 2 connects you to companies with verified agreements.
+            Day 1 builds your professional artifacts. Day 2 connects you to OJT partner companies.
           </p>
         </div>
 
@@ -277,7 +284,7 @@
             <article class="tier-panel js-tilt" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden>
               <div class="tier-panel-copy">
                 <h3>Opportunity Radar and Resource Vault</h3>
-                <p>Career conversations with alumni and engineers, access to the verified partner company radar map, and curated software licenses and certification resources. Record one opportunity and one concrete follow-up before leaving.</p>
+                <p>Career conversations with alumni and engineers, access to the OJT partner directory, and curated software licenses and certification resources. Record one opportunity and one concrete follow-up before leaving.</p>
               </div>
               <div class="tier-panel-side">
                 <h4>Stations</h4>
@@ -294,78 +301,58 @@
       </div>
     </section>
 
-    <!-- Dynamic Opportunity Radar Showcase -->
     <section class="section section-alt" id="board" aria-labelledby="board-title">
       <div class="container board-grid">
         <div class="board-copy">
-          <h2 id="board-title" class="section-title">Verified partner companies. Filtered by distance and discipline.</h2>
-          <p class="section-lede">
-            Every listing represents an active Memorandum of Agreement (MOA) with the university. Select your campus and test the live filters right here:
-          </p>
+          <h2 id="board-title" class="section-title">Explore OJT partners</h2>
+          <p class="section-lede">Browse in-person OJT agreements from the university’s MOA filing records. Filter the agreements by filing status or change the campus used for distances in the map preview.</p>
 
-          <!-- Interactive Live Filter Controls -->
           <div class="landing-filter-bar">
             <div class="filter-chip-group">
-              <label for="landing-filter-program" class="visually-hidden">Program</label>
-              <select id="landing-filter-program" class="landing-select">
-                <option value="all">All Disciplines</option>
-                <option value="CpE">Computer Eng (CpE)</option>
-                <option value="ECE">Electronics (ECE)</option>
-                <option value="EE">Electrical (EE)</option>
-                <option value="CS">Comp Science (CS)</option>
-                <option value="IT">Info Tech (IT)</option>
-              </select>
-
-              <label for="landing-filter-campus" class="visually-hidden">Campus</label>
-              <select id="landing-filter-campus" class="landing-select">
-                <option value="alangilan">BatStateU Alangilan</option>
-                <option value="pabloBorbon">Pablo Borbon</option>
-                <option value="malvar">Malvar</option>
-                <option value="lipa">Lipa</option>
-              </select>
+              <label for="landing-filter-program" class="filter-field">
+                Filing status
+                <select id="landing-filter-program" class="landing-select">
+                  <option value="all">All statuses</option>
+                  <option value="NOTARIZED">Notarized</option>
+                  <option value="FOR PICK-UP">For pick-up</option>
+                  <option value="FOR NOTARIZATION">For notarization</option>
+                  <option value="SIGNED">Signed</option>
+                  <option value="STATUS NOT LISTED">Status not listed</option>
+                  <option value="FOR SIGNATURE (COMPANY)">For company signature</option>
+                </select>
+              </label>
+              <label for="landing-filter-campus" class="filter-field">
+                Campus
+                <select id="landing-filter-campus" class="landing-select">
+                  <option value="alangilan">Alangilan</option>
+                  <option value="pabloBorbon">Pablo Borbon</option>
+                  <option value="malvar">Malvar</option>
+                  <option value="lipa">Lipa</option>
+                </select>
+              </label>
             </div>
           </div>
 
-          <dl class="feature-list">
-            <div class="feature">
-              <dt>Discipline matching</dt>
-              <dd>Filter by CpE, ECE, EE, ME, IE, CS, IT, and ChE.</dd>
-            </div>
-            <div class="feature">
-              <dt>Opportunity tracks</dt>
-              <dd>OJT / Internship, Fresh Grad Hiring, Capstone, or Immersion.</dd>
-            </div>
-            <div class="feature">
-              <dt>Haversine distance</dt>
-              <dd>Accurate direct distance from Alangilan, Pablo Borbon, or Malvar.</dd>
-            </div>
-            <div class="feature">
-              <dt>Browser shortlist</dt>
-              <dd>Star companies in Opportunity Radar to save and export your personal shortlist.</dd>
-            </div>
-          </dl>
-
           <a href="./index.html" class="btn btn-primary btn-lg" data-os-launch>
-            Launch Fullscreen Opportunity Radar &rarr;
+            Launch Opportunity Radar &rarr;
           </a>
         </div>
 
-        <div class="partner-table-wrap js-tilt" data-tilt-max="4">
+        <div class="partner-table-wrap">
           <div class="table-header-bar">
-            <span>Verified Hub Capacity</span>
-            <span class="num" id="table-total-slots">126 open slots</span>
+            <span>Agreement summary</span>
+            <span class="num" id="table-total-slots">— records</span>
           </div>
           <table class="partner-table">
-            <caption class="visually-hidden">Partner companies by hub</caption>
+            <caption class="visually-hidden">Agreement records by filing status</caption>
             <thead>
               <tr>
-                <th scope="col">Industrial Hub</th>
-                <th scope="col" class="t-right">Partners</th>
-                <th scope="col" class="t-right">Open Slots</th>
+                <th scope="col">Filing status</th>
+                <th scope="col" class="t-right">Agreements</th>
+                <th scope="col" class="t-right">Mapped</th>
               </tr>
             </thead>
             <tbody id="hub-table">
-              <tr class="is-loading"><td colspan="3"><span class="sk sk-w100"></span></td></tr>
               <tr class="is-loading"><td colspan="3"><span class="sk sk-w100"></span></td></tr>
               <tr class="is-loading"><td colspan="3"><span class="sk sk-w100"></span></td></tr>
             </tbody>
@@ -460,7 +447,7 @@
     <!-- Closing Call to Action -->
     <section class="closing">
       <div class="container closing-inner">
-        <h2 class="closing-title">Calibrate your trajectory. Find your partner on the map.</h2>
+        <h2 class="closing-title">Find your next OJT partner.</h2>
         <a href="./index.html" class="btn btn-primary btn-lg" data-os-launch>
           Open Opportunity Radar
           <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
@@ -495,8 +482,7 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script type="module" src="./js/glass-warp.js"></script>
   <script type="module" src="./js/os-transition.js"></script>
   <script type="module" src="./js/database.js"></script>

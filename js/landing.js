@@ -3,10 +3,13 @@
  * Includes:
  * 1. 3D Card Gyro / Mouse Perspective Tilts
  * 2. Animated Number Counter Tickers
- * 3. Dynamic In-Page Program & Campus Filter
+ * 3. Dynamic Filing Status & Campus Filter
  * 4. 3D WebGL Orbital Stage Sync
  * 5. Live Manila Event Countdown & Status
  */
+
+import { addAtlas } from "./atlas.js";
+import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./database.js";
 
 (function () {
   const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
@@ -304,8 +307,10 @@
     document.querySelectorAll(".tier-stage-btn, .orbit-stage-item").forEach(btn => {
       btn.addEventListener("click", () => {
         const tierNum = parseInt(btn.dataset.stageTier || btn.dataset.orbitTier, 10);
-        document.querySelectorAll(".tier-stage-btn, .orbit-stage-item").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+        document.querySelectorAll(".tier-stage-btn, .orbit-stage-item").forEach(b => {
+          b.classList.toggle("active", b === btn);
+          if (b.hasAttribute("aria-pressed")) b.setAttribute("aria-pressed", String(b === btn));
+        });
 
         if (typeof window.set3DActiveTier === "function") {
           window.set3DActiveTier(tierNum);
@@ -319,39 +324,24 @@
 
   /* Data-driven sections & Dynamic Landing Filter ------------------------ */
   function renderFacts(companies) {
-    const hubs = new Set(companies.map(c => c.hub).filter(Boolean));
-    const totalSlots = companies.reduce((sum, c) => sum + (c.slots || 0), 0);
-
-    const partnersCounter = document.getElementById("fact-partners");
-    if (partnersCounter) {
-      partnersCounter.dataset.target = companies.length;
-      partnersCounter.textContent = `${companies.length}+`;
+    const notarized = companies.filter(c => c.moaStatus?.toUpperCase() === "NOTARIZED").length;
+    for (const [id, count] of [["fact-partners", companies.length], ["fact-slots", notarized]]) {
+      const counter = document.getElementById(id);
+      if (counter) counter.textContent = count.toLocaleString();
     }
-
-    const slotsCounter = document.getElementById("fact-slots");
-    if (slotsCounter) {
-      slotsCounter.dataset.target = totalSlots;
-      slotsCounter.textContent = `${totalSlots}+`;
-    }
-
-    const previewCount = document.getElementById("preview-count");
-    if (previewCount) previewCount.textContent = `${companies.length} verified partners`;
-
-    const tableSlots = document.getElementById("table-total-slots");
-    if (tableSlots) tableSlots.textContent = `${totalSlots} open slots`;
   }
 
   function renderPreviewList(companies, origin) {
     const list = document.getElementById("preview-list");
     if (!list) return;
 
-    const nearest = companies
+    const nearest = companies.filter(hasCoordinates)
       .map(c => ({ c, km: haversineKm(origin, c) }))
       .sort((a, b) => a.km - b.km)
       .slice(0, 3);
 
     if (nearest.length === 0) {
-      list.innerHTML = `<li class="preview-item"><span class="preview-name">No partners match selected discipline.</span></li>`;
+      list.innerHTML = `<li class="preview-item"><span class="preview-name">No mapped partners match this filing status.</span></li>`;
       return;
     }
 
@@ -364,42 +354,48 @@
       .join("");
   }
 
-  function renderHubTable(companies) {
+  function renderStatusTable(companies) {
+    const total = document.getElementById("table-total-slots");
+    if (total) total.textContent = `${companies.length.toLocaleString()} records`;
     const tbody = document.getElementById("hub-table");
     if (!tbody) return;
 
-    const groups = new Map();
-    companies.forEach(c => {
-      const key = c.hub || "Other";
-      const g = groups.get(key) || { partners: 0, slots: 0 };
-      g.partners += 1;
-      g.slots += Number(c.slots) || 0;
-      groups.set(key, g);
+    const statuses = new Map();
+    companies.forEach(company => {
+      const status = filingStatus(company);
+      const group = statuses.get(status) || { agreements: 0, mapped: 0 };
+      group.agreements++;
+      if (hasCoordinates(company)) group.mapped++;
+      statuses.set(status, group);
     });
 
-    const rows = Array.from(groups.entries()).sort((a, b) => b[1].partners - a[1].partners || a[0].localeCompare(b[0]));
-    const totalSlots = rows.reduce((s, [, g]) => s + g.slots, 0);
-
-    tbody.innerHTML = rows
-      .map(([hub, g]) => `
+    if (!statuses.size) {
+      tbody.innerHTML = '<tr><td colspan="3">No agreements match this filing status.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = [...statuses]
+      .sort((a, b) => b[1].agreements - a[1].agreements)
+      .map(([status, { agreements, mapped }]) => `
         <tr>
-          <td>${escapeHtml(hub)}</td>
-          <td class="t-right num">${g.partners}</td>
-          <td class="t-right num">${g.slots}</td>
+          <td>${escapeHtml(status)}</td>
+          <td class="t-right num">${agreements.toLocaleString()}</td>
+          <td class="t-right num">${mapped}</td>
         </tr>`)
       .join("");
-
-    const tfoot = document.createElement("tfoot");
-    tfoot.innerHTML = `<tr><td>Total Capacity</td><td class="t-right num">${companies.length}</td><td class="t-right num">${totalSlots}</td></tr>`;
-    tbody.parentElement.querySelector("tfoot")?.remove();
-    tbody.parentElement.appendChild(tfoot);
   }
 
   function renderPreviewMap(companies, origin) {
     const skeleton = document.getElementById("map-skeleton");
     const done = () => skeleton && skeleton.classList.add("is-done");
 
-    if (!window.L || !document.getElementById("preview-map")) { done(); return; }
+    const mapped = companies.filter(hasCoordinates);
+    const count = document.getElementById("preview-count");
+    if (count) count.textContent = `${mapped.length} mapped ${mapped.length === 1 ? "partner" : "partners"}`;
+    if (!document.getElementById("preview-map")) return;
+    if (!window.L) {
+      skeleton?.classList.add("is-unavailable");
+      return;
+    }
 
     if (!previewMapInstance) {
       previewMapInstance = L.map("preview-map", {
@@ -413,12 +409,9 @@
         attributionControl: true
       });
 
-      const base = L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { attribution: "Esri", maxZoom: 16 }
-      ).addTo(previewMapInstance);
-      base.once("load", done);
-      setTimeout(done, 3000);
+      previewMapInstance.attributionControl.setPrefix(false);
+      addAtlas(previewMapInstance, { labels: false });
+      done();
 
       previewMarkersLayer = L.layerGroup().addTo(previewMapInstance);
     }
@@ -429,37 +422,35 @@
       const pinIcon = L.divIcon({ className: "", html: '<div class="preview-pin"></div>', iconSize: [12, 12], iconAnchor: [6, 6] });
       const campusIcon = L.divIcon({ className: "", html: '<div class="preview-campus"></div>', iconSize: [14, 14], iconAnchor: [7, 7] });
 
-      companies.forEach(c => L.marker([c.lat, c.lng], { icon: pinIcon, interactive: false, keyboard: false }).addTo(previewMarkersLayer));
+      mapped.forEach(c => L.marker([c.lat, c.lng], { icon: pinIcon, interactive: false, keyboard: false }).addTo(previewMarkersLayer));
       L.marker([origin.lat, origin.lng], { icon: campusIcon, interactive: false, keyboard: false }).addTo(previewMarkersLayer);
 
-      const bounds = L.latLngBounds(companies.map(c => [c.lat, c.lng]).concat([[origin.lat, origin.lng]]));
-      previewMapInstance.fitBounds(bounds, { padding: [24, 24] });
+      const bounds = L.latLngBounds(mapped.map(c => [c.lat, c.lng]).concat([[origin.lat, origin.lng]]));
+      previewMapInstance.fitBounds(bounds, { padding: [24, 24], maxZoom: 11 });
     }
   }
 
   // Dynamic Landing Filter Handler
   function filterLandingData() {
-    const program = document.getElementById("landing-filter-program")?.value || "all";
+    const status = document.getElementById("landing-filter-program")?.value || "all";
     const campusKey = document.getElementById("landing-filter-campus")?.value || "alangilan";
-    const origin = window.CAMPUSES[campusKey] || window.CAMPUSES.alangilan;
+    const origin = CAMPUSES[campusKey] || CAMPUSES.alangilan;
 
     const filtered = cachedCompanies.filter(c => {
-      return program === "all" || (c.programs && c.programs.includes(program));
+      return status === "all" || filingStatus(c).toUpperCase() === status;
     });
 
+    renderStatusTable(filtered);
     renderPreviewList(filtered, origin);
     renderPreviewMap(filtered, origin);
   }
 
   async function initData() {
     try {
-      const { companies } = await window.DatabaseService.loadCompanies();
+      const { companies } = await DatabaseService.loadCompanies();
       cachedCompanies = companies;
-      const origin = window.CAMPUSES.alangilan;
       renderFacts(companies);
-      renderPreviewList(companies, origin);
-      renderHubTable(companies);
-      renderPreviewMap(companies, origin);
+      filterLandingData();
 
       // Bind filter controls
       document.getElementById("landing-filter-program")?.addEventListener("change", filterLandingData);
@@ -467,8 +458,7 @@
     } catch (err) {
       const list = document.getElementById("preview-list");
       if (list) list.innerHTML = '<li class="preview-item"><span class="preview-name">Explore full directory on the board.</span></li>';
-      const sk = document.getElementById("map-skeleton");
-      if (sk) sk.classList.add("is-done");
+      document.getElementById("map-skeleton")?.classList.add("is-unavailable");
     }
   }
 

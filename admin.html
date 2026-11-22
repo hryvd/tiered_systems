@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Tiered Systems • Administrator Settings</title>
-  <meta name="description" content="Direct administrator workspace for Tiered Systems Opportunity Radar: configure map defaults, Google Sheets CSV sync, and verified MOA partner records." />
+  <meta name="description" content="Direct administrator workspace for Tiered Systems Opportunity Radar: configure map defaults, Google Sheets CSV sync, and MOA partner records." />
   <meta name="theme-color" content="#09090b" />
 
   <!-- Google Fonts: Inter & Geist Mono -->
@@ -58,14 +58,14 @@
       <div>
         <p class="admin-kicker">OPPORTUNITY RADAR · CONTROL PLANE</p>
         <h1>Administrator Settings</h1>
-        <p class="admin-lede">Configure default map appearance, live Google Sheets CSV ingestion, and verified MOA partner records across the directory.</p>
+        <p class="admin-lede">Configure default map appearance, live Google Sheets CSV ingestion, and MOA partner records across the directory.</p>
       </div>
     </section>
 
     <!-- Live KPI Summary -->
     <section class="admin-kpi-grid" aria-label="Directory summary">
       <article class="admin-kpi-card admin-glass">
-        <span class="admin-kpi-label">Active Partners</span>
+        <span class="admin-kpi-label">Agreement Records</span>
         <strong class="admin-kpi-val num" id="admin-kpi-total">—</strong>
         <span class="admin-kpi-note">Total on radar</span>
       </article>
@@ -75,9 +75,9 @@
         <span class="admin-kpi-note">Added via admin</span>
       </article>
       <article class="admin-kpi-card admin-glass">
-        <span class="admin-kpi-label">Open Slots</span>
-        <strong class="admin-kpi-val num" id="admin-kpi-slots">—</strong>
-        <span class="admin-kpi-note">Available OJT seats</span>
+        <span class="admin-kpi-label">Mapped Partners</span>
+        <strong class="admin-kpi-val num" id="admin-kpi-mapped">—</strong>
+        <span class="admin-kpi-note">Records with coordinates</span>
       </article>
       <article class="admin-kpi-card admin-glass">
         <span class="admin-kpi-label">Directory Source</span>
@@ -99,7 +99,8 @@
           <div class="admin-card-body">
             <div>
               <span class="admin-section-label">Default Basemap Style</span>
-              <div class="admin-seg-grid cols-3" id="admin-basemap-pills">
+              <div class="admin-seg-grid" id="admin-basemap-pills">
+                <button type="button" class="admin-seg-btn" data-basemap="atlas">Atlas</button>
                 <button type="button" class="admin-seg-btn" data-basemap="satellite">Satellite</button>
                 <button type="button" class="admin-seg-btn" data-basemap="dark">Obsidian</button>
                 <button type="button" class="admin-seg-btn" data-basemap="street">Street</button>
@@ -160,10 +161,10 @@
         </article>
       </div>
 
-      <!-- Add Verified MOA Partner -->
+      <!-- Add MOA Partner -->
       <article class="admin-card admin-glass">
         <header class="admin-card-head">
-          <h2>Add Verified MOA Partner</h2>
+          <h2>Add MOA Partner</h2>
           <p>Publish a new industry partner directly to the Opportunity Radar satellite map.</p>
         </header>
 
@@ -268,12 +269,12 @@
     <section class="admin-card admin-glass admin-directory-card" aria-label="Partner directory">
       <header class="admin-dir-head">
         <div>
-          <h2>Active MOA Partner Directory</h2>
-          <p id="admin-dir-count" class="admin-dir-sub">Loading verified partners…</p>
+          <h2>MOA Partner Directory</h2>
+          <p id="admin-dir-count" class="admin-dir-sub">Loading agreement records…</p>
         </div>
         <div class="admin-dir-search-wrap">
           <label for="admin-dir-search" class="visually-hidden">Filter partner directory</label>
-          <input type="search" id="admin-dir-search" class="admin-input" placeholder="Filter by company, hub, program, or MOA ref…" autocomplete="off" />
+          <input type="search" id="admin-dir-search" class="admin-input" placeholder="Filter by organization, filing status, or register #…" autocomplete="off" />
         </div>
       </header>
 
@@ -282,9 +283,9 @@
           <thead>
             <tr>
               <th scope="col">Partner</th>
-              <th scope="col">Sector &amp; Hub</th>
-              <th scope="col">Programs</th>
-              <th scope="col">Slots</th>
+              <th scope="col">Filing status</th>
+              <th scope="col">Date signed</th>
+              <th scope="col">Contract end</th>
               <th scope="col">Origin</th>
               <th scope="col" class="t-right">Action</th>
             </tr>

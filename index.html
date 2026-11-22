@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Tiered Systems • Opportunity Radar</title>
-  <meta name="description" content="Interactive liquid-glass Opportunity Radar satellite map of verified Memorandum of Agreement (MOA) industry partner companies for BatStateU Alangilan." />
+  <meta name="description" content="Explore the BatStateU on-the-job training agreement directory and map known partner locations." />
   <meta property="og:title" content="Tiered Systems • Opportunity Radar" />
-  <meta property="og:description" content="Explore verified MOA industry partners across Batangas, Calabarzon, and Metro Manila on a live liquid-glass satellite map." />
+  <meta property="og:description" content="Search BatStateU on-the-job training agreements and explore known partner locations." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#09090b" />
 
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <!-- Google Fonts: Inter & Geist Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -46,7 +46,7 @@
   <a class="skip-link" href="#os-search-input">Skip to partner search</a>
 
   <!-- Full-Bleed Live Map Canvas -->
-  <div id="opportunity-map" role="region" aria-label="Interactive satellite map of verified MOA partner companies"></div>
+  <div id="opportunity-map" role="region" aria-label="Map of known MOA partner locations"></div>
   <div class="map-vignette" aria-hidden="true"></div>
 
   <!-- Non-blocking Floating Status Toast -->
@@ -76,14 +76,14 @@
           </svg>
         </a>
 
-        <label for="os-search-input" class="visually-hidden">Search verified MOA partners</label>
+        <label for="os-search-input" class="visually-hidden">Search MOA records</label>
         <span class="os-search-label" aria-hidden="true">SEARCH</span>
 
         <input
           type="search"
           id="os-search-input"
           class="os-search-input"
-          placeholder="Companies, Batangas hubs, CpE/ECE, MOA ref…"
+          placeholder="Search companies or agreements…"
           autocomplete="off"
           spellcheck="false"
         />
@@ -98,13 +98,14 @@
         </a>
       </div>
 
-      <!-- Category Filter Pills (ALL · SOFTWARE · HARDWARE · AI / ML · ENERGY) -->
-      <div class="os-cat-row" id="os-cat-row" role="group" aria-label="Sector category filter">
-        <button type="button" class="os-cat-pill glass-pill active" data-cat="ALL">ALL</button>
-        <button type="button" class="os-cat-pill glass-pill" data-cat="SOFTWARE">SOFTWARE</button>
-        <button type="button" class="os-cat-pill glass-pill" data-cat="HARDWARE">HARDWARE</button>
-        <button type="button" class="os-cat-pill glass-pill" data-cat="AI / ML">AI / ML</button>
-        <button type="button" class="os-cat-pill glass-pill" data-cat="ENERGY">ENERGY</button>
+      <!-- MOA filing status filters -->
+      <div class="os-cat-row" id="os-cat-row" role="group" aria-label="MOA filing status">
+        <button type="button" class="os-cat-pill glass-pill active" data-cat="ALL" aria-pressed="true">All records</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="NOTARIZED" aria-pressed="false">Notarized</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="FOR PICK-UP" aria-pressed="false">For pick-up</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="FOR NOTARIZATION" aria-pressed="false">For notarization</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="SIGNED" aria-pressed="false">Signed</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="FOR SIGNATURE (COMPANY)" aria-pressed="false">For company signature</button>
       </div>
     </header>
 
@@ -128,7 +129,7 @@
       <div class="os-rail-divider" aria-hidden="true"></div>
 
       <div class="os-rail-group">
-        <button type="button" class="os-nav-btn" data-panel="inventory" title="Capacity analytics, shortlist &amp; CSV export">
+        <button type="button" class="os-nav-btn" data-panel="inventory" title="Agreement statistics, shortlist &amp; CSV export">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19v-4" /></svg>
           <span>INVENTORY</span>
         </button>
@@ -168,7 +169,7 @@
       <div class="os-inspector-topbar">
         <span class="os-verified-chip" id="os-inspector-status">
           <span class="dot" aria-hidden="true"></span>
-          <span>Active MOA</span>
+          <span>Agreement details</span>
         </span>
         <div class="os-inspector-topbar-actions">
           <button type="button" class="os-icon-btn" id="btn-inspector-bookmark" aria-label="Save partner to shortlist" title="Save to shortlist">☆</button>
@@ -212,6 +213,10 @@
         </button>
 
         <div class="os-layers-menu glass-surface" id="os-layers-menu" role="menu" aria-label="Map styles" hidden>
+          <button type="button" class="os-layer-opt" data-style="atlas" role="menuitemradio" aria-checked="false">
+            <span class="layer-swatch swatch-atlas" aria-hidden="true"></span>
+            <span>Atlas</span>
+          </button>
           <button type="button" class="os-layer-opt active" data-style="satellite" role="menuitemradio" aria-checked="true">
             <span class="layer-swatch swatch-sat" aria-hidden="true"></span>
             <span>Satellite</span>
@@ -262,7 +267,7 @@
   </div>
 
   <!-- Scripts -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script type="module" src="./js/os-app.js"></script>
 </body>
 </html>

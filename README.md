@@ -1,6 +1,6 @@
 # TIERED SYSTEM • MOA Opportunity Board & Partner Locator
 
-Interactive web directory and radar map of verified Memorandum of Agreement (MOA) industry partner companies for **Batangas State University (The National Engineering University) — Alangilan Campus**, built for the **Computer Engineering Students' Organization (CURSOR)**.
+Interactive web directory of Memorandum of Agreement (MOA) industry partner records with a map for known locations for **Batangas State University (The National Engineering University) — Alangilan Campus**, built for the **Computer Engineering Students' Organization (CURSOR)**.
 
 ---
 
@@ -15,7 +15,7 @@ opportunity-board/
 │   ├── database.js                   # Data loader, Google Sheets CSV parser & LocalStorage layer
 │   └── app.js                        # Map engine, filters, distance calculator & UI controller
 ├── data/
-│   ├── companies.json                # Primary JSON database of verified MOA partner companies
+│   ├── companies.json                # Face-to-face OJT agreement register used by the radar
 │   └── moa_companies_template.csv    # Spreadsheet template ready to import into Google Sheets
 ├── design/
 │   ├── STACK.md                      # Architecture & tech stack overview
@@ -45,6 +45,12 @@ opportunity-board/
 ---
 
 ## How to Manage & Update the Partner Database
+
+### Bundled face-to-face OJT register
+
+The default directory uses all 1,171 numbered rows from `MOA Filing System for OJT 102226.xlsx - Full F2F.csv`. The register lists organization names, dates signed, validity terms, contract end dates and filing statuses. Organizations may have multiple agreement rows. The Radar keeps those records separate and displays dates and statuses as listed instead of inferring current validity or openings.
+
+The spreadsheet does not include coordinates. The two map pins for Analog Devices General Trias and Microchip Technology Calamba use their matching locations from the previous directory. The catalog includes the remaining records and offers an organization-name search in Maps when a location is unavailable. The **Atlas** basemap and satellite fallback use bundled 1:10m [Natural Earth](https://www.naturalearthdata.com/) geography.
 
 You have **three ways** to add or update partner companies:
 

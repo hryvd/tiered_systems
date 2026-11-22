@@ -1,350 +1,297 @@
-/**
- * Tiered Systems · Official 3D Emblem & 4-Tier Progression Architecture
- * Faithfully engineered from the CURSOR Tiered System visual identity:
- * - Official golden-bronze interlocking triquetra spherical core emblem
- * - Matrix of beveled chassis squircle tiles with backlighting
- * - 4 interactive ascending tier platforms (Prepare, Level Up, Discover, Connect)
- */
+/** Interactive Tiered Systems emblem. Four beveled bands form an open copper globe. */
+const container = document.getElementById("emblem-3d-canvas");
+const indicator = document.getElementById("indicator-tier-name");
+const stageLabels = [
+  "Prepare · Résumé & project artifact",
+  "Level Up · LinkedIn & technical pitch",
+  "Discover · Industry keynote & alumni panel",
+  "Connect · Opportunity Radar"
+];
+let updateModel = () => {};
+let selectedTier = 1;
 
-(function () {
-  const container = document.getElementById("emblem-3d-canvas");
-  if (!container || !window.THREE) return;
+window.set3DActiveTier = tier => {
+  if (!stageLabels[tier - 1]) return;
+  selectedTier = tier;
+  if (indicator) indicator.textContent = stageLabels[tier - 1];
+  document.querySelectorAll("[data-stage-tier]").forEach(button => {
+    button.setAttribute("aria-pressed", String(Number(button.dataset.stageTier) === tier));
+  });
+  updateModel(tier - 1);
+};
 
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+window.set3DActiveTier(selectedTier);
+if (container) {
+  const preload = new IntersectionObserver(([entry]) => {
+    if (!entry.isIntersecting) return;
+    preload.disconnect();
+    startEmblem();
+  }, { rootMargin: "240px" });
+  preload.observe(container);
+}
 
-  // Scene, Camera, Renderer
+async function startEmblem() {
+  try {
+    // Vite bundles Three.js. Branch-based GitHub Pages serves the source HTML directly.
+    const three = import.meta.env ? await import("./three-runtime.js") : await loadStaticThree();
+    initEmblem(three);
+    updateModel(selectedTier - 1);
+  } catch (error) {
+    console.warn("The emblem is using its static preview.", error);
+  }
+}
+
+function loadStaticThree() {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js";
+    script.integrity = "sha384-qOkzR5Ke/XkQxuGVJ9hpFEpDlcoLtWwVYhnJf06cLIZa2vaIptSqaubivErzmD5O";
+    script.crossOrigin = "anonymous";
+    script.onload = () => resolve(window.THREE);
+    script.onerror = () => reject(new Error("Three.js did not load"));
+    document.head.appendChild(script);
+  });
+}
+
+function initEmblem(THREE) {
+  const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
-  camera.position.set(0, 0.8, 8.2);
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 40);
+  camera.position.set(0, 0, 9.6);
 
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.3;
-  container.appendChild(renderer.domElement);
+  renderer.toneMappingExposure = 1.12;
+  renderer.domElement.setAttribute("aria-hidden", "true");
 
-  // Master group that tilts and rotates with mouse/touch interaction
-  const masterGroup = new THREE.Group();
-  scene.add(masterGroup);
+  // Broad reflected studio lights keep copper readable without a remote environment map.
+  const reflection = document.createElement("canvas");
+  reflection.width = 512;
+  reflection.height = 256;
+  const paint = reflection.getContext("2d");
+  paint.fillStyle = "#402720";
+  paint.fillRect(0, 0, 512, 256);
+  paint.fillStyle = "#ffcd95";
+  paint.fillRect(40, 32, 132, 37);
+  paint.fillStyle = "#ffe6ca";
+  paint.fillRect(275, 63, 57, 104);
+  paint.fillStyle = "#ae6b46";
+  paint.fillRect(390, 150, 80, 45);
+  const studio = new THREE.CanvasTexture(reflection);
+  studio.mapping = THREE.EquirectangularReflectionMapping;
+  studio.colorSpace = THREE.SRGBColorSpace;
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromEquirectangular(studio).texture;
+  pmrem.dispose();
+  studio.dispose();
 
-  // Neutral White Studio Lighting on Obsidian Black (#09090b / #E8590C)
-  const ambientLight = new THREE.AmbientLight(0xf4f4f6, 0.55);
-  scene.add(ambientLight);
-
-  const coreLight = new THREE.PointLight(0xe8590c, 1.5, 12, 1.3);
-  coreLight.position.set(0, 0.2, 0);
-  masterGroup.add(coreLight);
-
-  const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-  keyLight.position.set(6, 6, 7);
+  scene.add(new THREE.HemisphereLight(0xffca97, 0x392921, 1.05));
+  const keyLight = new THREE.DirectionalLight(0xffdbb3, 2.5);
+  keyLight.position.set(4, 7, 5);
   scene.add(keyLight);
-
-  const rimLight = new THREE.DirectionalLight(0xf4f4f6, 1.6);
-  rimLight.position.set(-6, -4, -4);
+  const rimLight = new THREE.DirectionalLight(0xff9a49, 2.8);
+  rimLight.position.set(-5, -3, 1);
   scene.add(rimLight);
 
-  // Materials
-  // 1. Matte Brushed Silver-White Bands
-  const bronzeEmblemMat = new THREE.MeshStandardMaterial({
-    color: 0xe5e5ea,
-    metalness: 0.72,
+  const assembly = new THREE.Group();
+  scene.add(assembly);
+
+  const copper = new THREE.MeshStandardMaterial({
+    vertexColors: true,
     roughness: 0.32,
-    envMapIntensity: 1.15
+    metalness: 0.68
   });
-
-  // 2. Dark Obsidian Beveled Chassis Tiles
-  const chassisTileMat = new THREE.MeshStandardMaterial({
-    color: 0x16161a,
-    metalness: 0.45,
-    roughness: 0.52
-  });
-
-  // 3. Burnt Orange Core Sphere Material (#E8590C)
-  const coreGlowMat = new THREE.MeshStandardMaterial({
-    color: 0xe8590c,
-    emissive: 0xe8590c,
-    emissiveIntensity: 0.35,
-    metalness: 0.3,
-    roughness: 0.38
-  });
-
-  // --- 1. Background Matrix of Squircle Chassis Tiles (From CURSOR Poster) ---
-  const tileGroup = new THREE.Group();
-  tileGroup.position.z = -1.6;
-  masterGroup.add(tileGroup);
-
-  const tileSize = 1.45;
-  const tileGap = 1.7;
-  for (let row = -1; row <= 1; row++) {
-    for (let col = -1; col <= 1; col++) {
-      // Create rounded plate using ExtrudeGeometry with Rounded Rect
-      const shape = new THREE.Shape();
-      const r = 0.28;
-      const w = tileSize;
-      const h = tileSize;
-      const x = -w / 2;
-      const y = -h / 2;
-
-      shape.moveTo(x + r, y);
-      shape.lineTo(x + w - r, y);
-      shape.quadraticCurveTo(x + w, y, x + w, y + r);
-      shape.lineTo(x + w, y + h - r);
-      shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      shape.lineTo(x + r, y + h);
-      shape.quadraticCurveTo(x, y + h, x, y + h - r);
-      shape.lineTo(x, y + r);
-      shape.quadraticCurveTo(x, y, x + r, y);
-
-      const extrudeSettings = {
-        depth: 0.12,
-        bevelEnabled: true,
-        bevelSegments: 4,
-        steps: 1,
-        bevelSize: 0.08,
-        bevelThickness: 0.08
-      };
-
-      const tileGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-      tileGeo.center();
-      const tileMesh = new THREE.Mesh(tileGeo, chassisTileMat.clone());
-      tileMesh.position.set(col * tileGap, row * tileGap, 0);
-      tileGroup.add(tileMesh);
-    }
+  const bands = [
+    { radius: 2.13, width: 0.44, depth: 0.29, tilt: [Math.PI / 2, 0, 0] },
+    { radius: 2.08, width: 0.31, depth: 0.17, tilt: [0.37, 0, 0.23] },
+    { radius: 2.02, width: 0.19, depth: 0.16, tilt: [0.04, 0.24, Math.PI / 2] },
+    { radius: 1.99, width: 0.22, depth: 0.16, tilt: [0.48, 0, -0.68] }
+  ];
+  for (const { radius, width, depth, tilt } of bands) {
+    const band = new THREE.Mesh(beveledBand(THREE, radius, width, depth), copper);
+    band.rotation.set(...tilt, "YXZ");
+    assembly.add(band);
   }
 
-  // --- 2. Official Tiered System 3D Interlocking Core Emblem ---
-  const emblemCoreGroup = new THREE.Group();
-  emblemCoreGroup.position.set(0, 0.4, 0);
-  masterGroup.add(emblemCoreGroup);
-
-  // Central radiant sphere
-  const coreSphereGeo = new THREE.SphereGeometry(0.85, 32, 32);
-  const coreSphereMesh = new THREE.Mesh(coreSphereGeo, coreGlowMat);
-  emblemCoreGroup.add(coreSphereMesh);
-
-  // Three Interlocking Metallic Torus Bands (Symmetrical Triquetra Knot)
-  const bandRadius = 1.62;
-  const bandTube = 0.095;
-  const bandGeo = new THREE.TorusGeometry(bandRadius, bandTube, 28, 96);
-
-  // Band 1: Equatorial
-  const band1 = new THREE.Mesh(bandGeo, bronzeEmblemMat.clone());
-  band1.rotation.x = Math.PI / 2;
-  emblemCoreGroup.add(band1);
-
-  // Band 2: Rotated 60 degrees
-  const band2 = new THREE.Mesh(bandGeo, bronzeEmblemMat.clone());
-  band2.rotation.x = Math.PI / 3.4;
-  band2.rotation.y = Math.PI / 4;
-  emblemCoreGroup.add(band2);
-
-  // Band 3: Rotated -60 degrees
-  const band3 = new THREE.Mesh(bandGeo, bronzeEmblemMat.clone());
-  band3.rotation.x = -Math.PI / 3.4;
-  band3.rotation.y = -Math.PI / 4;
-  emblemCoreGroup.add(band3);
-
-  // --- 3. The 4 Ascending Tier Platforms (Prepare, Level Up, Discover, Connect) ---
-  const tierPlatforms = [];
-  const tierConfigs = [
-    { tier: 1, name: "Prepare", radius: 2.7, yPos: -1.7, label: "Tier 01: Prepare · Resume & Project Artifact" },
-    { tier: 2, name: "Level Up", radius: 2.2, yPos: -1.45, label: "Tier 02: Level Up · LinkedIn Architecture & Pitch" },
-    { tier: 3, name: "Discover", radius: 1.7, yPos: -1.2, label: "Tier 03: Discover · Industry Keynote & Alumni Panel" },
-    { tier: 4, name: "Connect", radius: 1.2, yPos: -0.95, label: "Tier 04: Connect · Active MOA Opportunity Radar" }
+  const glints = [
+    makeGlint(THREE, scene, [-1.48, -1.45, 0.21], -0.33, 1.0),
+    makeGlint(THREE, scene, [1.92, -0.82, 0.20], -0.29, 0.8)
+  ];
+  const stageAngles = [
+    [-0.03, -0.06],
+    [0.05, 0.29],
+    [-0.21, 0.20],
+    [0.17, -0.31]
   ];
 
-  tierConfigs.forEach((cfg, idx) => {
-    const platformGroup = new THREE.Group();
-    platformGroup.position.y = cfg.yPos;
-    masterGroup.add(platformGroup);
-
-    // Dark obsidian disc platform
-    const discGeo = new THREE.CylinderGeometry(cfg.radius, cfg.radius * 1.04, 0.06, 48);
-    const discMat = new THREE.MeshStandardMaterial({
-      color: 0x16161a,
-      metalness: 0.45,
-      roughness: 0.52
-    });
-    const discMesh = new THREE.Mesh(discGeo, discMat);
-    platformGroup.add(discMesh);
-
-    // Matte perimeter circuit rim
-    const rimGeo = new THREE.TorusGeometry(cfg.radius * 1.02, 0.035, 16, 64);
-    const rimMat = new THREE.MeshStandardMaterial({
-      color: 0x383840,
-      emissive: 0x000000,
-      emissiveIntensity: 0,
-      metalness: 0.4,
-      roughness: 0.4
-    });
-    const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-    rimMesh.rotation.x = Math.PI / 2;
-    rimMesh.position.y = 0.035;
-    platformGroup.add(rimMesh);
-
-    tierPlatforms.push({
-      tier: cfg.tier,
-      group: platformGroup,
-      discMesh: discMesh,
-      rimMesh: rimMesh,
-      baseY: cfg.yPos,
-      targetY: cfg.yPos,
-      label: cfg.label
-    });
-  });
-
-  // Ambient Circuit Node Dust (Gentle particles)
-  const particleCount = reduceMotion ? 15 : 45;
-  const particleGeo = new THREE.BufferGeometry();
-  const particlePos = new Float32Array(particleCount * 3);
-  for (let i = 0; i < particleCount * 3; i += 3) {
-    const r = 2.2 + Math.random() * 2.8;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(2 * Math.random() - 1);
-    particlePos[i] = r * Math.sin(phi) * Math.cos(theta);
-    particlePos[i + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.7;
-    particlePos[i + 2] = r * Math.cos(phi);
-  }
-  particleGeo.setAttribute("position", new THREE.BufferAttribute(particlePos, 3));
-  const particleMat = new THREE.PointsMaterial({
-    color: 0xd4d4d8,
-    size: 0.045,
-    transparent: true,
-    opacity: 0.42
-  });
-  const particles = new THREE.Points(particleGeo, particleMat);
-  masterGroup.add(particles);
-
-  // Interactive Mouse / Touch Parallax
-  let mouseX = 0;
-  let mouseY = 0;
-  let targetRotationX = 0.15; // subtle natural top-down isometric view
-  let targetRotationY = 0;
-  let isHovered = false;
-
-  function onPointerMove(e) {
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-      mouseX = (x / rect.width) * 2 - 1;
-      mouseY = -(y / rect.height) * 2 + 1;
-      targetRotationY = mouseX * 0.65;
-      targetRotationX = 0.15 - mouseY * 0.45;
-      isHovered = true;
-    } else {
-      isHovered = false;
-    }
-  }
-
-  window.addEventListener("pointermove", onPointerMove, { passive: true });
-
-  // Touch drag support
-  let isDragging = false;
-  let prevTouchX = 0;
-  let prevTouchY = 0;
-
-  container.addEventListener("touchstart", (e) => {
-    if (e.touches.length === 1) {
-      isDragging = true;
-      prevTouchX = e.touches[0].clientX;
-      prevTouchY = e.touches[0].clientY;
-    }
-  }, { passive: true });
-
-  window.addEventListener("touchmove", (e) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - prevTouchX;
-    const dy = e.touches[0].clientY - prevTouchY;
-    targetRotationY += dx * 0.007;
-    targetRotationX = Math.max(-0.4, Math.min(0.6, targetRotationX + dy * 0.007));
-    prevTouchX = e.touches[0].clientX;
-    prevTouchY = e.touches[0].clientY;
-  }, { passive: true });
-
-  window.addEventListener("touchend", () => { isDragging = false; });
-
-  // Responsiveness
-  function onResize() {
-    if (!container) return;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
-  }
-  window.addEventListener("resize", onResize, { passive: true });
-
-  // Pause rendering when off-screen for battery & performance
-  let isVisible = true;
-  const observer = new IntersectionObserver(([entry]) => {
-    isVisible = entry.isIntersecting;
-  }, { threshold: 0.05 });
-  observer.observe(container);
-
-  // Active Tier State Handler (Called when user clicks a tier in the UI)
-  window.set3DActiveTier = function (tierNum) {
-    const indicatorEl = document.getElementById("indicator-tier-name");
-
-    tierPlatforms.forEach((p) => {
-      const match = p.tier === tierNum;
-      if (match) {
-        // Flat Burnt Orange active tier rim (#E8590C)
-        p.rimMesh.material.color.setHex(0xe8590c);
-        p.rimMesh.material.emissive.setHex(0xe8590c);
-        p.rimMesh.material.emissiveIntensity = 0.35;
-        p.discMesh.material.color.setHex(0x222228);
-        p.targetY = p.baseY + 0.14; // Slightly elevate active tier platform
-
-        if (indicatorEl) {
-          indicatorEl.textContent = p.label;
-        }
-      } else {
-        // Inactive tiers stay matte obsidian
-        p.rimMesh.material.color.setHex(0x383840);
-        p.rimMesh.material.emissive.setHex(0x000000);
-        p.rimMesh.material.emissiveIntensity = 0;
-        p.discMesh.material.color.setHex(0x16161a);
-        p.targetY = p.baseY;
-      }
-    });
-
-    // Subtle light settle on tier switch
-    coreLight.intensity = 1.8;
-    setTimeout(() => { coreLight.intensity = 1.5; }, 350);
+  let active = 0;
+  let targetTurn = 0;
+  let targetTilt = 0;
+  let frame = 0;
+  let visible = true;
+  let paused = false;
+  let dragStart = null;
+  let lastTime = 0;
+  let glintWake = 0;
+  const requestRender = () => {
+    if (!frame && visible && !paused) frame = requestAnimationFrame(render);
   };
 
-  // Set default initial active tier to 1
-  window.set3DActiveTier(1);
+  updateModel = index => {
+    if (active !== index) glintWake = performance.now();
+    active = index;
+    requestRender();
+  };
 
-  // Animation Loop
-  let clock = new THREE.Clock();
-
-  function animate() {
-    requestAnimationFrame(animate);
-    if (!isVisible) return;
-
-    const delta = clock.getDelta();
-
-    // Constant smooth background rotation of emblem and squircle backdrop
-    if (!reduceMotion) {
-      emblemCoreGroup.rotation.y += 0.005;
-      emblemCoreGroup.rotation.x = Math.sin(clock.getElapsedTime() * 0.8) * 0.08;
-      particles.rotation.y -= 0.0015;
+  function render(now) {
+    frame = 0;
+    if (!visible || paused) return;
+    const reduced = motionPreference.matches;
+    const settle = reduced ? 1 : 1 - Math.exp(-Math.min(now - lastTime, 50) / 170);
+    lastTime = now;
+    const [stageTilt, stageTurn] = stageAngles[active];
+    const idle = reduced ? 0 : Math.sin(now / 2650) * 0.035;
+    assembly.rotation.x += (stageTilt + (reduced ? 0 : targetTilt) - assembly.rotation.x) * settle;
+    assembly.rotation.y += (stageTurn + (reduced ? 0 : targetTurn) + idle - assembly.rotation.y) * settle;
+    assembly.updateMatrixWorld();
+    const wake = reduced || glintWake === 0 ? 0 : Math.exp(-Math.max(0, now - glintWake) / 380);
+    for (const { flare, anchor, brightness } of glints) {
+      flare.position.copy(anchor).applyMatrix4(assembly.matrixWorld);
+      flare.position.z += 0.026;
+      flare.scale.x = 1 + wake * 0.36;
+      flare.material.uniforms.strength.value = brightness * (0.78 + wake * 0.45);
     }
-
-    // Smooth lerping of platform elevation heights
-    tierPlatforms.forEach(p => {
-      p.group.position.y += (p.targetY - p.group.position.y) * 0.12;
-    });
-
-    // Spring interpolation toward target rotation
-    masterGroup.rotation.y += (targetRotationY - masterGroup.rotation.y) * 0.06;
-    masterGroup.rotation.x += (targetRotationX - masterGroup.rotation.x) * 0.06;
-
     renderer.render(scene, camera);
+    if (!reduced) requestRender();
   }
 
-  animate();
-})();
+  const resize = () => {
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    if (!width || !height) return;
+    camera.aspect = width / height;
+    camera.zoom = Math.min(1, camera.aspect / 0.97);
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    requestRender();
+  };
+
+  container.addEventListener("pointerdown", event => {
+    dragStart = event.clientX;
+    container.setPointerCapture(event.pointerId);
+  });
+  container.addEventListener("pointermove", event => {
+    if (motionPreference.matches) return;
+    if (dragStart !== null) {
+      targetTurn = THREE.MathUtils.clamp((event.clientX - dragStart) / 225, -0.64, 0.64);
+      return;
+    }
+    if (event.pointerType !== "mouse") return;
+    const box = container.getBoundingClientRect();
+    targetTurn = ((event.clientX - box.left) / box.width - 0.5) * 0.26;
+    targetTilt = ((event.clientY - box.top) / box.height - 0.5) * 0.16;
+  });
+  container.addEventListener("pointerenter", () => {
+    glintWake = performance.now();
+  });
+  const resetMotion = () => {
+    dragStart = null;
+    targetTurn = 0;
+    targetTilt = 0;
+  };
+  container.addEventListener("lostpointercapture", resetMotion);
+  container.addEventListener("pointerleave", resetMotion);
+
+  renderer.domElement.addEventListener("webglcontextlost", event => {
+    event.preventDefault();
+    paused = true;
+    container.classList.remove("has-model");
+  });
+  renderer.domElement.addEventListener("webglcontextrestored", () => {
+    paused = false;
+    requestRender();
+    container.classList.add("has-model");
+  });
+
+  new ResizeObserver(resize).observe(container);
+  new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    requestRender();
+  }).observe(container);
+  motionPreference.addEventListener("change", requestRender);
+
+  container.appendChild(renderer.domElement);
+  resize();
+  container.classList.add("has-model");
+}
+
+function beveledBand(THREE, radius, width, depth) {
+  // Wrap a beveled rectangular section around a great circle of the globe.
+  const half = width / 2;
+  const bevel = 0.036;
+  const flank = Math.sqrt(radius * radius - half * half);
+  const section = [
+    [flank - depth, -half + bevel, 0x663822],
+    [flank - depth + bevel, -half, 0x9c5a32],
+    [flank - bevel, -half, 0xe2a76d],
+    [flank, -half + bevel, 0xffcc91],
+    [radius, 0, 0xaa572b],
+    [flank, half - bevel, 0xffcc91],
+    [flank - bevel, half, 0xe2a76d],
+    [flank - depth + bevel, half, 0x9c5a32],
+    [flank - depth, half - bevel, 0x663822]
+  ];
+  section.push(section[0]);
+  const geometry = new THREE.LatheGeometry(section.map(([x, y]) => new THREE.Vector2(x, y)), 144);
+  const palette = section.map(([, , color]) => new THREE.Color(color));
+  const colors = new Float32Array(geometry.attributes.position.count * 3);
+  for (let i = 0; i < geometry.attributes.position.count; i++) {
+    palette[i % palette.length].toArray(colors, i * 3);
+  }
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  return geometry;
+}
+
+function makeGlint(THREE, scene, point, angle, brightness) {
+  // A tight white reflection, wider amber bloom and directional lens streak share one plane.
+  const flare = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.1, 0.9),
+    new THREE.ShaderMaterial({
+      transparent: true,
+      blending: THREE.CustomBlending,
+      blendSrc: THREE.SrcAlphaFactor,
+      blendDst: THREE.OneFactor,
+      blendSrcAlpha: THREE.OneFactor,
+      blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
+      depthTest: false,
+      depthWrite: false,
+      uniforms: { strength: { value: brightness } },
+      vertexShader: `
+        varying vec2 lens;
+        void main() {
+          lens = uv * 2.0 - 1.0;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec2 lens;
+        uniform float strength;
+        void main() {
+          vec2 core = lens * vec2(21.0, 7.0);
+          vec2 bloom = lens * vec2(5.5, 2.5);
+          vec2 smear = lens * vec2(2.35, 16.0);
+          float peak = exp(-dot(core, core));
+          float halo = exp(-dot(bloom, bloom));
+          float streak = exp(-dot(smear, smear));
+          vec3 light = mix(vec3(1.0, 0.42, 0.13), vec3(1.0, 0.98, 0.85), peak);
+          float edge = 1.0 - smoothstep(0.73, 1.0, max(abs(lens.x), abs(lens.y)));
+          gl_FragColor = vec4(light, min(1.0, strength * (peak + 0.21 * halo + 0.38 * streak)) * edge);
+        }
+      `
+    })
+  );
+  flare.rotation.z = angle;
+  scene.add(flare);
+  return { flare, anchor: new THREE.Vector3(...point), brightness };
+}

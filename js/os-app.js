@@ -3,9 +3,11 @@
  * Full-bleed satellite map + translucent black glass HUD + Vinora analytics + AI Matcher
  */
 import "./glass-warp.js";
-import { CAMPUSES, DatabaseService, STORAGE_KEYS } from "./database.js";
+import { addAtlas } from "./atlas.js";
+import { CAMPUSES, DatabaseService, downloadCompaniesCsv, filingStatus, formatAgreementDate, hasCoordinates, STORAGE_KEYS } from "./database.js";
 
 const BASEMAPS = {
+  atlas: {},
   satellite: {
     base: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     reference: "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
@@ -32,17 +34,19 @@ const TIER_MILESTONES = [
 
 const DRAWER_META = {
   distance: { title: "Distance & Filters", sub: "Campus origin, radius ring & engineering tracks" },
-  catalog: { title: "MOA Partner Catalog", sub: "Browse, sort & inspect verified industry partners" },
-  ai: { title: "AI Partner Agent", sub: "Natural-language career & OJT matching" },
-  inventory: { title: "Capacity & Shortlist", sub: "Sector distribution, open slots & CSV export" },
+  catalog: { title: "MOA Partner Catalog", sub: "Browse industry agreements and filing status" },
+  ai: { title: "Partner Matcher", sub: "Search available agreement details" },
+  inventory: { title: "Register & Shortlist", sub: "Filing status, saved agreements & CSV export" },
   profile: { title: "Student Profile", sub: "Your program preferences & 4-Tier readiness" }
 };
 
+const CATALOG_PAGE_SIZE = 40;
 const state = {
   companies: [],
   filtered: [],
   selectedId: null,
   activeCategory: "ALL",
+  catalogLimit: CATALOG_PAGE_SIZE,
   activePanel: null,
   searchQuery: "",
   programFilter: "all",
@@ -50,7 +54,7 @@ const state = {
   campusKey: "alangilan",
   radiusKm: 120,
   allowanceOnly: false,
-  sortBy: "nearest",
+  sortBy: "register",
   basemap: "satellite",
   showRadius: true,
   railCollapsed: false,
@@ -102,8 +106,18 @@ function getCampus() {
 }
 
 function companyDistanceKm(company) {
+  if (!hasCoordinates(company)) return Infinity;
   const campus = getCampus();
-  return haversineKm(campus.lat, campus.lng, Number(company.lat), Number(company.lng));
+  return haversineKm(campus.lat, campus.lng, company.lat, company.lng);
+}
+
+function distanceLabel(company) {
+  return hasCoordinates(company) ? `${companyDistanceKm(company).toFixed(1)} km` : "Unmapped";
+}
+
+function slotLabel(company) {
+  if (company.slots == null) return "Slots not listed";
+  return company.slots > 0 ? `${company.slots} slots open` : "Cohort Full";
 }
 
 function shortCompanyName(name) {
@@ -156,6 +170,7 @@ function hideToast() {
 
 /* Map Initialization & Rendering ----------------------------------------- */
 function initMap() {
+  if (!window.L) return Promise.resolve();
   map = L.map("opportunity-map", {
     center: [14.02, 121.05],
     zoom: 10,
@@ -163,6 +178,7 @@ function initMap() {
     attributionControl: true
   });
 
+  addAtlas(map);
   markersLayer = L.layerGroup().addTo(map);
   const baseLayer = setBasemap(state.basemap);
   updateCampusMarker();
@@ -185,7 +201,7 @@ function initMap() {
 }
 
 function setBasemap(styleKey, { persist = true } = {}) {
-  const key = BASEMAPS[styleKey] ? styleKey : "satellite";
+  const key = Object.hasOwn(BASEMAPS, styleKey) ? styleKey : "satellite";
   state.basemap = key;
   if (persist) {
     state.prefs = DatabaseService.savePrefs({ ...state.prefs, basemap: key });
@@ -195,7 +211,7 @@ function setBasemap(styleKey, { persist = true } = {}) {
   activeTileLayers = [];
 
   let baseLayer = null;
-  if (map) {
+  if (map && key !== "atlas") {
     const cfg = BASEMAPS[key];
     baseLayer = L.tileLayer(cfg.base, { attribution: cfg.attribution, maxZoom: 18 }).addTo(map);
     activeTileLayers.push(baseLayer);
@@ -208,7 +224,7 @@ function setBasemap(styleKey, { persist = true } = {}) {
 
   const preview = document.getElementById("os-layers-preview");
   if (preview) {
-    preview.classList.remove("is-satellite", "is-dark", "is-street");
+    preview.classList.remove("is-atlas", "is-satellite", "is-dark", "is-street");
     preview.classList.add(`is-${key}`);
   }
 
@@ -262,22 +278,26 @@ function renderMarkers() {
   markersLayer.clearLayers();
   markersById.clear();
 
-  state.filtered.forEach(company => {
+  state.filtered.filter(hasCoordinates).forEach(company => {
     const selected = company.id === state.selectedId;
-    const isFull = (company.slots || 0) <= 0;
+    const isFull = company.slots === 0;
+    const code = company.registerNumber
+      ? company.name.split(/\s+/, 2).map(word => word[0]).join("").toUpperCase()
+      : sectorBadgeCode(company.type);
     const labelHtml = selected
-      ? `<span class="os-pin-label">${escapeHtml(shortCompanyName(company.name))} · ${company.slots || 0} slots</span>`
+      ? `<span class="os-pin-label">${escapeHtml(shortCompanyName(company.name))}</span>`
       : "";
 
     const icon = L.divIcon({
       className: "",
-      html: `<div class="os-pin-wrap ${selected ? "is-selected" : ""} ${isFull ? "is-full" : ""}">${labelHtml}<div class="os-pin-orb">${escapeHtml(sectorBadgeCode(company.type))}</div></div>`,
+      html: `<div class="os-pin-wrap ${selected ? "is-selected" : ""} ${isFull ? "is-full" : ""}">${labelHtml}<div class="os-pin-orb">${escapeHtml(code)}</div></div>`,
       iconSize: [38, 38],
       iconAnchor: [19, 19]
     });
 
     const marker = L.marker([company.lat, company.lng], {
       icon,
+      title: company.name,
       zIndexOffset: selected ? 900 : 0
     });
 
@@ -293,18 +313,19 @@ function renderMarkers() {
 function fitAllPins() {
   if (!map) return;
   const campus = getCampus();
-  const points = state.filtered.map(c => [c.lat, c.lng]);
+  const points = state.filtered.filter(hasCoordinates).map(c => [c.lat, c.lng]);
   points.push([campus.lat, campus.lng]);
   const bounds = L.latLngBounds(points);
-  if (isMobileViewport()) {
-    map.fitBounds(bounds, {
-      paddingTopLeft: [24, 118],
-      paddingBottomRight: [24, 152],
-      maxZoom: 13
-    });
-  } else {
-    map.fitBounds(bounds, { padding: [70, 70], maxZoom: 13 });
-  }
+  const top = Math.round(document.querySelector(".os-top-cluster").getBoundingClientRect().bottom);
+  const inspectorWidth = document.getElementById("os-inspector").offsetWidth;
+  const railWidth = document.getElementById("os-nav-rail").offsetWidth;
+  const mobile = isMobileViewport();
+  map.fitBounds(bounds, {
+    paddingTopLeft: [mobile ? 24 : railWidth + 30, top + 24],
+    paddingBottomRight: [mobile ? 24 : inspectorWidth + 30, mobile ? 185 : 86],
+    animate: false,
+    maxZoom: 13
+  });
 }
 
 /* Filtering & Sorting ---------------------------------------------------- */
@@ -314,7 +335,7 @@ function computeFiltered() {
   const list = state.companies.filter(company => {
     const dist = companyDistanceKm(company);
     if (state.radiusKm < 120 && dist > state.radiusKm) return false;
-    if (!matchesCategoryPill(company, state.activeCategory)) return false;
+    if (state.activeCategory !== "ALL" && company.moaStatus?.toUpperCase() !== state.activeCategory) return false;
     if (state.programFilter !== "all" && !(company.programs || []).includes(state.programFilter)) return false;
     if (state.acceptsFilter !== "all" && !(company.accepts || []).includes(state.acceptsFilter)) return false;
     if (state.allowanceOnly && !company.hasAllowance) return false;
@@ -327,6 +348,8 @@ function computeFiltered() {
         company.hub,
         company.address,
         company.moaRef,
+        company.moaStatus,
+        company.registerNumber,
         ...(company.programs || []),
         ...(company.acceptedRoles || [])
       ]
@@ -338,39 +361,36 @@ function computeFiltered() {
   });
 
   list.sort((a, b) => {
-    if (state.sortBy === "slots") return (b.slots || 0) - (a.slots || 0);
-    if (state.sortBy === "name") return String(a.name).localeCompare(String(b.name));
-    return companyDistanceKm(a) - companyDistanceKm(b);
+    if (state.sortBy === "register") return (Number(b.registerNumber) || 0) - (Number(a.registerNumber) || 0);
+    if (state.sortBy === "nearest") {
+      const difference = companyDistanceKm(a) - companyDistanceKm(b);
+      if (difference) return difference;
+    }
+    return a.name.localeCompare(b.name);
   });
 
   state.filtered = list;
 }
 
-function refreshWorkspace() {
+function refreshWorkspace({ refreshDrawer = true } = {}) {
   computeFiltered();
   updateRadiusCircle();
-  renderMarkers();
 
   const pill = document.getElementById("os-result-pill");
   if (pill) {
-    const slots = state.filtered.reduce((sum, c) => sum + (Number(c.slots) || 0), 0);
-    pill.textContent = `${state.filtered.length} MOAs · ${slots} slots`;
+    pill.textContent = `${state.filtered.length.toLocaleString()} MOAs · ${state.filtered.filter(hasCoordinates).length} mapped`;
   }
 
   const clearBtn = document.getElementById("os-search-clear");
   if (clearBtn) clearBtn.hidden = state.searchQuery.length === 0;
 
-  if (!state.selectedId || !state.companies.some(c => c.id === state.selectedId)) {
-    const preferred =
-      state.filtered.find(c => c.id === "moa-009") ||
-      state.filtered[0] ||
-      state.companies.find(c => c.id === "moa-009") ||
-      state.companies[0];
-    state.selectedId = preferred ? preferred.id : null;
+  if (!state.filtered.some(c => c.id === state.selectedId)) {
+    state.selectedId = state.filtered[0]?.id || null;
   }
 
+  renderMarkers();
   renderInspector();
-  if (state.activePanel) renderActiveDrawer();
+  if (state.activePanel && refreshDrawer) renderActiveDrawer();
 }
 
 /* Selection & Right Floating Inspector ----------------------------------- */
@@ -398,7 +418,7 @@ function selectCompany(companyId, options = {}) {
     renderActiveDrawer();
   }
 
-  if (pan && map) {
+  if (pan && map && hasCoordinates(company)) {
     map.flyTo([company.lat, company.lng], Math.max(map.getZoom(), 12), { duration: 0.65 });
   }
 }
@@ -432,25 +452,29 @@ function renderInspector() {
   const reopenLabel = document.getElementById("os-reopen-label");
   if (!content || !actions) return;
 
-  const company = state.companies.find(c => c.id === state.selectedId) || state.filtered[0] || state.companies[0];
+  const company = state.companies.find(c => c.id === state.selectedId);
   if (!company) {
-    content.innerHTML = `<p style="color:var(--ink-muted); font-size:0.86rem;">No verified partner companies loaded yet.</p>`;
+    content.innerHTML = `<p style="color:var(--ink-muted); font-size:0.86rem;">No agreements match the current filters.</p>`;
     actions.innerHTML = "";
     if (peek) peek.innerHTML = "";
+    if (statusEl) statusEl.textContent = "MOA Register";
+    if (bookmarkBtn) bookmarkBtn.disabled = true;
+    if (reopenLabel) reopenLabel.textContent = "Agreement details";
     return;
   }
 
   const campus = getCampus();
-  const distKm = companyDistanceKm(company).toFixed(1);
-  const isFull = (company.slots || 0) <= 0;
+  const dist = distanceLabel(company);
+  const isFull = company.slots === 0;
   const savedSet = new Set(DatabaseService.getBookmarks());
   const isSaved = savedSet.has(company.id);
-  const profProgram = state.profile.program;
+  const isRegisterRecord = Boolean(company.registerNumber);
 
   if (statusEl) {
-    statusEl.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${escapeHtml(company.moaRef || "MOA Verified")}</span>`;
+    statusEl.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${escapeHtml(isRegisterRecord ? `REGISTER № ${company.registerNumber}` : company.moaRef || "MOA record")}</span>`;
   }
   if (bookmarkBtn) {
+    bookmarkBtn.disabled = false;
     bookmarkBtn.textContent = isSaved ? "★" : "☆";
     bookmarkBtn.classList.toggle("is-saved", isSaved);
     bookmarkBtn.setAttribute("aria-label", isSaved ? "Remove from saved shortlist" : "Save partner to shortlist");
@@ -465,7 +489,7 @@ function renderInspector() {
         <div class="os-monogram">${escapeHtml(company.name.slice(0, 2).toUpperCase())}</div>
         <div style="min-width:0;">
           <div class="os-peek-title">${escapeHtml(company.name)}</div>
-          <div class="os-peek-sub">${distKm} km · ${isFull ? "Cohort Full" : `${company.slots} slots`}</div>
+          <div class="os-peek-sub">${escapeHtml(isRegisterRecord ? filingStatus(company) : `${dist} · ${slotLabel(company)}`)}</div>
         </div>
       </div>
       <div class="os-peek-actions">
@@ -485,6 +509,35 @@ function renderInspector() {
     });
   }
 
+  if (isRegisterRecord) {
+    content.innerHTML = `
+      <div class="os-insp-header">
+        <div class="os-monogram">${escapeHtml(company.name.slice(0, 2).toUpperCase())}</div>
+        <div>
+          <h3 class="os-insp-title">${escapeHtml(company.name)}</h3>
+          <p class="os-insp-cat">${escapeHtml(filingStatus(company))}</p>
+        </div>
+      </div>
+      <div class="os-kv-list">
+        <div class="os-kv-row"><span>Date signed</span><span>${escapeHtml(formatAgreementDate(company.signedOn))}</span></div>
+        <div class="os-kv-row"><span>Agreement term</span><span>${escapeHtml(company.agreementTerm || "Not listed")}</span></div>
+        <div class="os-kv-row"><span>Contract end</span><span>${escapeHtml(formatAgreementDate(company.endsOn))}</span></div>
+        <div class="os-kv-row"><span>Placement type</span><span>Face-to-face OJT</span></div>
+      </div>
+      <div class="os-insp-block">
+        <h4>Location</h4>
+        <p>${hasCoordinates(company) ? escapeHtml(`${company.address} · ${dist} from ${campus.shortName}`) : "The MOA register does not list a location for this partner."}</p>
+      </div>
+    `;
+    const locationQuery = hasCoordinates(company) ? `${company.lat},${company.lng}` : company.name;
+    actions.innerHTML = `
+      <a href="https://www.google.com/maps/search/?api=1&query=${escapeHtml(encodeURIComponent(locationQuery))}" target="_blank" rel="noopener noreferrer" class="os-btn-ghost">
+        ${hasCoordinates(company) ? "Open location in Maps" : "Search name in Maps"}
+      </a>
+    `;
+    return;
+  }
+
   content.innerHTML = `
     <div class="os-insp-header">
       <div class="os-monogram" style="width:44px; height:44px; font-size:0.9rem;">
@@ -499,19 +552,19 @@ function renderInspector() {
     <div class="os-insp-stats">
       <div class="os-insp-stat">
         <small>From ${escapeHtml(campus.shortName.split(" ")[0])}</small>
-        <strong class="num is-accent">${distKm} km</strong>
+        <strong class="num is-accent">${dist}</strong>
       </div>
       <div class="os-insp-stat">
         <small>Open Slots</small>
-        <strong class="num ${isFull ? "is-coral" : "is-sage"}">${isFull ? "Full (0)" : company.slots}</strong>
+        <strong class="num ${isFull ? "is-coral" : "is-sage"}">${isFull ? "Full (0)" : company.slots ?? "Not listed"}</strong>
       </div>
       <div class="os-insp-stat">
         <small>Work Setup</small>
-        <strong>${escapeHtml(company.workSetup || "On-Site")}</strong>
+        <strong>${escapeHtml(company.workSetup || "Not listed")}</strong>
       </div>
     </div>
 
-    <div class="os-insp-location">
+    ${hasCoordinates(company) ? `<div class="os-insp-location">
       <div>
         <p>${escapeHtml(company.address)}</p>
         <span class="os-insp-coords">${Number(company.lat).toFixed(4)}, ${Number(company.lng).toFixed(4)} · ${escapeHtml(company.hub || "Calabarzon")}</span>
@@ -519,7 +572,7 @@ function renderInspector() {
       <button type="button" class="os-icon-btn" id="btn-insp-fly" title="Center map on partner" aria-label="Center map on partner">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" /><circle cx="8" cy="8" r="1.6" /></svg>
       </button>
-    </div>
+    </div>` : ""}
 
     <div class="os-insp-block">
       <h4>Company Overview</h4>
@@ -558,9 +611,9 @@ function renderInspector() {
     }
 
     <div class="os-kv-list">
-      <div class="os-kv-row"><span>MOA Validity</span><span>${escapeHtml(company.moaStatus || "Active MOA")}</span></div>
+      <div class="os-kv-row"><span>MOA Validity</span><span>${escapeHtml(filingStatus(company))}</span></div>
       <div class="os-kv-row"><span>Tracks</span><span>${escapeHtml((company.accepts || ["OJT / Internship"]).join(", "))}</span></div>
-      <div class="os-kv-row"><span>Stipend</span><span>${escapeHtml(company.allowanceDesc || (company.hasAllowance ? "Allowance Provided" : "Standard Immersion"))}</span></div>
+      <div class="os-kv-row"><span>Stipend</span><span>${escapeHtml(company.allowanceDesc || (company.hasAllowance ? "Allowance provided" : "Not listed"))}</span></div>
       <div class="os-kv-row"><span>Liaison</span><span>${escapeHtml(company.moaCoordinator || "Office of Industry Relations")}</span></div>
     </div>
   `;
@@ -582,9 +635,7 @@ function renderInspector() {
           </a>`
         : `<button type="button" class="os-cta-light is-disabled" disabled>MOA Contact Pending</button>`
     }
-    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.lat},${company.lng}`)}" target="_blank" rel="noopener noreferrer" class="os-btn-ghost">
-      Directions
-    </a>
+    ${hasCoordinates(company) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.lat},${company.lng}`)}" target="_blank" rel="noopener noreferrer" class="os-btn-ghost">Directions</a>` : ""}
   `;
 }
 
@@ -718,7 +769,7 @@ function renderDistancePane(body) {
     const label = body.querySelector("#os-radius-label");
     if (label) label.textContent = state.radiusKm >= 120 ? "All (No Limit)" : `Within ${state.radiusKm} km`;
     slider.style.setProperty("--pct", `${Math.round(((state.radiusKm - 10) / 110) * 100)}%`);
-    refreshWorkspace();
+    refreshWorkspace({ refreshDrawer: false });
   });
 
   body.querySelector("#os-filter-program").addEventListener("change", e => {
@@ -743,23 +794,21 @@ function renderCatalogPane(body) {
   const savedSet = new Set(DatabaseService.getBookmarks());
   body.innerHTML = `
     <div class="os-catalog-toolbar">
-      <span class="os-section-label" id="os-catalog-count" style="margin:0;">${state.filtered.length} of ${state.companies.length} partners</span>
+      <span class="os-section-label" id="os-catalog-count" style="margin:0;">${state.filtered.length.toLocaleString()} of ${state.companies.length.toLocaleString()} agreements</span>
     </div>
 
     <div class="os-seg-grid cols-3" id="os-sort-pills">
       <button type="button" class="os-seg-btn ${state.sortBy === "nearest" ? "active" : ""}" data-sort="nearest">Nearest</button>
-      <button type="button" class="os-seg-btn ${state.sortBy === "slots" ? "active" : ""}" data-sort="slots">Most Slots</button>
+      <button type="button" class="os-seg-btn ${state.sortBy === "register" ? "active" : ""}" data-sort="register">Register #</button>
       <button type="button" class="os-seg-btn ${state.sortBy === "name" ? "active" : ""}" data-sort="name">A–Z</button>
     </div>
 
     <div class="os-catalog-list" id="os-catalog-list">
       ${
         state.filtered.length === 0
-          ? `<div class="os-ai-msg is-bot">No MOA partners match the active filters. Try widening the radius or choosing ALL.</div>`
-          : state.filtered
+          ? `<div class="os-ai-msg is-bot">No agreements match. Try another search or clear the filters.</div>`
+          : state.filtered.slice(0, state.catalogLimit)
               .map(c => {
-                const dist = companyDistanceKm(c).toFixed(1);
-                const full = (c.slots || 0) <= 0;
                 const saved = savedSet.has(c.id);
                 return `
                   <article class="os-mini-card ${c.id === state.selectedId ? "selected" : ""}" data-company-id="${escapeHtml(c.id)}" tabindex="0" role="button">
@@ -767,15 +816,17 @@ function renderCatalogPane(body) {
                       <div class="os-monogram">${escapeHtml(c.name.slice(0, 2).toUpperCase())}</div>
                       <div class="os-mini-meta">
                         <h3>${escapeHtml(c.name)}</h3>
-                        <span>${escapeHtml(c.hub || c.address)}</span>
+                        <span>${escapeHtml(c.registerNumber ? `Register № ${c.registerNumber}` : c.hub || c.address || "MOA record")}</span>
                       </div>
                       <button type="button" class="os-icon-btn ${saved ? "is-saved" : ""}" data-bookmark-id="${escapeHtml(c.id)}" aria-label="${saved ? "Remove bookmark" : "Bookmark partner"}" style="width:30px;height:30px;font-size:0.85rem;">
                         ${saved ? "★" : "☆"}
                       </button>
                     </div>
                     <div class="os-mini-bottom">
-                      <span class="os-dist-badge">${dist} km</span>
-                      <span class="os-slots-txt ${full ? "is-full" : ""}">${full ? "Cohort Full" : `${c.slots} slots open`}</span>
+                      <span class="os-dist-badge">${escapeHtml(distanceLabel(c))}</span>
+                      ${c.registerNumber
+                        ? `<span class="os-filing-status ${c.moaStatus === "NOTARIZED" ? "is-notarized" : ""}">${escapeHtml(filingStatus(c))}</span>`
+                        : `<span class="os-slots-txt ${c.slots === 0 ? "is-full" : ""}">${escapeHtml(slotLabel(c))}</span>`}
                     </div>
                   </article>
                 `;
@@ -783,11 +834,20 @@ function renderCatalogPane(body) {
               .join("")
       }
     </div>
+    ${state.filtered.length > state.catalogLimit ? `<button type="button" class="os-btn-ghost" id="os-catalog-more">Show more agreements</button>` : ""}
   `;
+
+  body.querySelector("#os-catalog-more")?.addEventListener("click", () => {
+    const firstNew = state.filtered[state.catalogLimit];
+    state.catalogLimit += CATALOG_PAGE_SIZE;
+    renderCatalogPane(body);
+    body.querySelector(`[data-company-id="${CSS.escape(firstNew.id)}"]`)?.focus();
+  });
 
   body.querySelectorAll("#os-sort-pills .os-seg-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       state.sortBy = btn.dataset.sort;
+      state.catalogLimit = CATALOG_PAGE_SIZE;
       refreshWorkspace();
     });
   });
@@ -796,7 +856,7 @@ function renderCatalogPane(body) {
     const id = card.dataset.companyId;
     card.addEventListener("click", () => selectCompany(id, { pan: true, expandMobile: true, closeDrawerOnMobile: true }));
     card.addEventListener("keydown", e => {
-      if (e.key === "Enter" || e.key === " ") {
+      if (e.target === card && (e.key === "Enter" || e.key === " ")) {
         e.preventDefault();
         selectCompany(id, { pan: true, expandMobile: true, closeDrawerOnMobile: true });
       }
@@ -821,10 +881,11 @@ function runAiMatch(query) {
   const wantsRemote = /\b(remote|wfh)\b/.test(q);
   const wantsHybrid = /\b(hybrid)\b/.test(q);
   const wantsAllowance = /\b(allowance|paid|stipend|shuttle)\b/.test(q);
-  const wantsNearest = /\b(nearest|closest|near|batangas|alangilan|lipa|malvar|fpip|sto\.?\s*tomas)\b/.test(q);
+  const wantsNearest = /\b(nearest|closest|near)\b/.test(q);
   const wantsSoftware = /\b(software|cloud|web|ai|ml|data|fintech|saas)\b/.test(q);
   const wantsHardware = /\b(hardware|semicon|semiconductor|fpga|embedded|robotics|manufacturing|plc|ic)\b/.test(q);
   const wantsEnergy = /\b(energy|power|scada|petrochemical|lng|plant)\b/.test(q);
+  const searchText = q.replace(/^(?:find|search for|show me)\s+/, "").trim();
 
   const scored = state.companies
     .map(c => {
@@ -849,23 +910,29 @@ function runAiMatch(query) {
       if (/laguna/.test(q) && /laguna/i.test(fullText)) { score += 35; reasons.push("Laguna"); }
       if (/manila|bgc|ortigas|makati/.test(q) && /manila|bgc|ortigas|makati/i.test(fullText)) { score += 35; reasons.push("Metro Manila"); }
 
-      if ((c.slots || 0) > 0) score += Math.min(18, c.slots);
-      else score -= 35;
-
-      if (wantsNearest) score += Math.max(0, 35 - dist * 0.6);
-      else score += Math.max(0, 14 - dist * 0.15);
-
-      if (reasons.length === 0 && (c.programs || []).includes(prof.program)) {
-        reasons.push(`Fits ${prof.program}`);
+      if (c.moaStatus && q.includes(c.moaStatus.toLowerCase())) {
+        score += 32;
+        reasons.push(filingStatus(c));
       }
-      reasons.push(`${dist.toFixed(1)} km`);
+      if (searchText && c.name.toLowerCase().includes(searchText)) {
+        score += 40;
+        reasons.push("Organization name");
+      }
+      if (wantsNearest && Number.isFinite(dist)) {
+        score += 1 + Math.max(0, 35 - dist * 0.6);
+        reasons.push(distanceLabel(c));
+      }
+      if (score > 0 && c.slots > 0) score += Math.min(18, c.slots);
       return { company: c, score, reasons };
     })
+    .filter(match => match.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
   return {
-    summary: `Top ${scored.length} verified MOA matches from ${getCampus().shortName}${targetProgram ? ` tailored for ${targetProgram}` : ""}:`,
+    summary: scored.length
+      ? `${scored.length} matches from the available agreement details.`
+      : "No matches in the available details. Try an organization name or filing status.",
     matches: scored
   };
 }
@@ -874,16 +941,15 @@ function renderAiPane(body) {
   if (state.aiMessages.length === 0) {
     state.aiMessages.push({
       role: "bot",
-      text: `Ask me about internships, distance from ${getCampus().shortName}, paid stipends, or your ${state.profile.program} profile.`
+      text: "Search by organization or filing status, or find mapped partners nearest your campus."
     });
   }
 
   body.innerHTML = `
     <div class="os-ai-prompts" id="os-ai-prompts">
-      <button type="button" class="os-ai-chip" data-prompt="Nearest CpE OJT with allowance">Nearest CpE OJT</button>
-      <button type="button" class="os-ai-chip" data-prompt="Hybrid or remote software roles">Remote / Hybrid SW</button>
-      <button type="button" class="os-ai-chip" data-prompt="Semicon & hardware in FPIP or LIMA">FPIP / LIMA Hardware</button>
-      <button type="button" class="os-ai-chip" data-prompt="Best match for my profile">Match my profile</button>
+      <button type="button" class="os-ai-chip" data-prompt="Find notarized agreements">Notarized agreements</button>
+      <button type="button" class="os-ai-chip" data-prompt="Find nearest mapped partners">Nearest mapped</button>
+      <button type="button" class="os-ai-chip" data-prompt="Find Epson">Find Epson</button>
     </div>
 
     <div class="os-ai-thread" id="os-ai-thread">
@@ -900,7 +966,7 @@ function renderAiPane(body) {
                   <div class="os-ai-match-card">
                     <div style="min-width:0;">
                       <strong>${escapeHtml(company.name)}</strong>
-                      <span>${escapeHtml(reasons.join(" · "))} · ${(company.slots || 0) > 0 ? `${company.slots} slots` : "Full"}</span>
+                      <span>${escapeHtml(reasons.join(" · "))}</span>
                     </div>
                     <button type="button" class="os-btn-ghost" data-ai-inspect="${escapeHtml(company.id)}" style="min-height:30px;padding:0 10px;font-size:0.72rem;flex-shrink:0;">Inspect</button>
                   </div>`
@@ -953,23 +1019,16 @@ function renderAiPane(body) {
 function renderInventoryPane(body) {
   const savedIds = new Set(DatabaseService.getBookmarks());
   const savedCompanies = state.companies.filter(c => savedIds.has(c.id));
-  const totalSlots = state.filtered.reduce((s, c) => s + (Number(c.slots) || 0), 0);
-  const nearestKm = state.filtered.length
-    ? Math.min(...state.filtered.map(c => companyDistanceKm(c))).toFixed(1)
-    : "—";
-
-  // Concentric multi-ring calculations (Vinora Varietal Mix style)
-  const totalCount = Math.max(state.companies.length, 1);
-  const counts = {
-    hw: state.companies.filter(c => c.type === "Semiconductor" || c.type === "Manufacturing").length,
-    sw: state.companies.filter(c => c.type === "Software/AI" || c.type === "Telecom").length,
-    en: state.companies.filter(c => c.type === "Energy").length
-  };
+  const mapped = state.filtered.filter(hasCoordinates);
+  const nearestKm = mapped.length ? Math.min(...mapped.map(companyDistanceKm)).toFixed(1) : null;
+  const totalCount = Math.max(state.filtered.length, 1);
+  const notarized = state.filtered.filter(c => c.moaStatus?.toUpperCase() === "NOTARIZED").length;
+  const unlisted = state.filtered.filter(c => !c.moaStatus).length;
   const rings = [
-    { label: "Hardware & Mfg", pct: Math.round((counts.hw / totalCount) * 100), r: 42, color: "#ffffff" },
-    { label: "Software & Telecom", pct: Math.round((counts.sw / totalCount) * 100), r: 31, color: "#E8590C" },
-    { label: "Clean Energy", pct: Math.max(0, 100 - Math.round((counts.hw / totalCount) * 100) - Math.round((counts.sw / totalCount) * 100)), r: 20, color: "#8a8a96" }
-  ];
+    { label: "Notarized", count: notarized, r: 42, color: "var(--os-accent)" },
+    { label: "Other filing status", count: state.filtered.length - notarized - unlisted, r: 31, color: "#ffffff" },
+    { label: "Status not listed", count: unlisted, r: 20, color: "#8a8a96" }
+  ].map(ring => ({ ...ring, pct: Math.round(ring.count / totalCount * 100) }));
 
   body.innerHTML = `
     <div class="os-kpi-grid">
@@ -979,13 +1038,13 @@ function renderInventoryPane(body) {
         <span class="os-kpi-pill">of ${state.companies.length} total</span>
       </div>
       <div class="os-kpi-card">
-        <div class="os-kpi-label">Open Slots</div>
-        <div class="os-kpi-val num" id="os-inv-slots">${totalSlots}</div>
-        <span class="os-kpi-pill">Active openings</span>
+        <div class="os-kpi-label">Mapped Partners</div>
+        <div class="os-kpi-val num">${mapped.length}</div>
+        <span class="os-kpi-pill">Known locations</span>
       </div>
       <div class="os-kpi-card">
         <div class="os-kpi-label">Nearest Partner</div>
-        <div class="os-kpi-val num" id="os-inv-nearest">${nearestKm === "—" ? "—" : `${nearestKm} km`}</div>
+        <div class="os-kpi-val num" id="os-inv-nearest">${nearestKm ? `${nearestKm} km` : "—"}</div>
         <span class="os-kpi-pill">${escapeHtml(getCampus().shortName.split(" ")[0])}</span>
       </div>
       <div class="os-kpi-card">
@@ -996,9 +1055,9 @@ function renderInventoryPane(body) {
     </div>
 
     <div class="os-ring-card">
-      <span class="os-section-label" style="margin:0;"><span>Sector Mix · MOA Network</span></span>
+      <span class="os-section-label" style="margin:0;"><span>Filing status breakdown</span></span>
       <div class="os-ring-wrap">
-        <svg id="os-sector-ring-svg" width="108" height="108" viewBox="0 0 108 108" aria-label="Sector mix chart">
+        <svg id="os-sector-ring-svg" width="108" height="108" viewBox="0 0 108 108" aria-label="Filing status breakdown">
           ${rings
             .map(ring => {
               const circ = 2 * Math.PI * ring.r;
@@ -1036,7 +1095,7 @@ function renderInventoryPane(body) {
                 <div class="os-ai-match-card">
                   <div style="min-width:0; cursor:pointer;" data-shortlist-open="${escapeHtml(c.id)}">
                     <strong>${escapeHtml(c.name)}</strong>
-                    <span>${companyDistanceKm(c).toFixed(1)} km · ${(c.slots || 0) > 0 ? `${c.slots} slots` : "Cohort Full"}</span>
+                    <span>${escapeHtml(filingStatus(c))} · ${escapeHtml(distanceLabel(c))}</span>
                   </div>
                   <button type="button" class="os-icon-btn is-saved" data-shortlist-rm="${escapeHtml(c.id)}" aria-label="Remove from shortlist" style="width:28px;height:28px;font-size:0.8rem;">★</button>
                 </div>`
@@ -1048,7 +1107,7 @@ function renderInventoryPane(body) {
 
     <div class="os-seg-grid">
       <button type="button" class="os-cta-light" id="os-export-filtered">Export Filtered CSV</button>
-      <button type="button" class="os-btn-ghost" id="os-export-shortlist">Export Shortlist</button>
+      <button type="button" class="os-btn-ghost" id="os-export-shortlist" ${savedCompanies.length ? "" : "disabled"}>Export Shortlist</button>
     </div>
   `;
 
@@ -1059,10 +1118,7 @@ function renderInventoryPane(body) {
     btn.addEventListener("click", () => toggleBookmark(btn.dataset.shortlistRm));
   });
   body.querySelector("#os-export-filtered")?.addEventListener("click", () => exportCSV(state.filtered, "Filtered"));
-  body.querySelector("#os-export-shortlist")?.addEventListener("click", () => {
-    const list = savedCompanies.length ? savedCompanies : state.filtered;
-    exportCSV(list, savedCompanies.length ? "Shortlist" : "Filtered");
-  });
+  body.querySelector("#os-export-shortlist")?.addEventListener("click", () => exportCSV(savedCompanies, "Shortlist"));
 }
 
 function renderProfilePane(body) {
@@ -1173,11 +1229,14 @@ function renderProfilePane(body) {
   });
 
   body.querySelector("#os-apply-profile-filters")?.addEventListener("click", () => {
-    state.programFilter = body.querySelector("#os-prof-program")?.value || "all";
+    const hasPrograms = state.companies.some(company => company.programs?.length);
+    state.programFilter = hasPrograms ? body.querySelector("#os-prof-program").value : "all";
     state.campusKey = body.querySelector("#os-prof-campus")?.value || "alangilan";
     updateCampusMarker();
     refreshWorkspace();
-    showToast(`Filtered Opportunity Radar for ${state.programFilter} from ${getCampus().shortName}.`);
+    showToast(hasPrograms
+      ? `Filtered Opportunity Radar for ${state.programFilter} from ${getCampus().shortName}.`
+      : `Campus set to ${getCampus().shortName}. The register does not list eligible programs.`);
   });
 }
 
@@ -1190,6 +1249,14 @@ function toggleBookmark(companyId) {
   }
 }
 
+function syncFilingFilters() {
+  document.querySelectorAll(".os-cat-pill").forEach(button => {
+    const active = button.dataset.cat === state.activeCategory;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
 function resetFilters() {
   state.searchQuery = "";
   state.activeCategory = "ALL";
@@ -1197,55 +1264,19 @@ function resetFilters() {
   state.acceptsFilter = "all";
   state.radiusKm = 120;
   state.allowanceOnly = false;
-  state.sortBy = "nearest";
+  state.sortBy = "register";
+  state.catalogLimit = CATALOG_PAGE_SIZE;
 
   const searchInput = document.getElementById("os-search-input");
   if (searchInput) searchInput.value = "";
-  document.querySelectorAll(".os-cat-pill").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.cat === "ALL");
-  });
+  syncFilingFilters();
 
   refreshWorkspace();
   fitAllPins();
 }
 
 function exportCSV(companies, label) {
-  const campus = getCampus();
-  const header = "id,name,category,type,hub,address,lat,lng,distanceKm,moaStatus,moaRef,programs,accepts,workSetup,hasAllowance,allowanceDesc,slots,moaCoordinator,contactEmail\n";
-  const rows = companies
-    .map(c => {
-      const dist = companyDistanceKm(c).toFixed(1);
-      return [
-        `"${c.id}"`,
-        `"${(c.name || "").replace(/"/g, '""')}"`,
-        `"${(c.category || "").replace(/"/g, '""')}"`,
-        `"${c.type || ""}"`,
-        `"${c.hub || ""}"`,
-        `"${(c.address || "").replace(/"/g, '""')}"`,
-        c.lat,
-        c.lng,
-        dist,
-        `"${c.moaStatus || ""}"`,
-        `"${c.moaRef || ""}"`,
-        `"${(c.programs || []).join(";")}"`,
-        `"${(c.accepts || []).join(";")}"`,
-        `"${c.workSetup || "On-Site"}"`,
-        c.hasAllowance ? "true" : "false",
-        `"${(c.allowanceDesc || "").replace(/"/g, '""')}"`,
-        c.slots || 0,
-        `"${(c.moaCoordinator || "").replace(/"/g, '""')}"`,
-        `"${c.contactEmail || ""}"`
-      ].join(",");
-    })
-    .join("\n");
-
-  const blob = new Blob([header + rows + "\n"], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `Tiered_Systems_${label}_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCompaniesCsv(companies, label, company => hasCoordinates(company) ? companyDistanceKm(company).toFixed(1) : "");
 }
 
 async function loadDirectory() {
@@ -1377,6 +1408,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("os-search-input");
   searchInput?.addEventListener("input", e => {
     state.searchQuery = e.target.value;
+    state.catalogLimit = CATALOG_PAGE_SIZE;
+    if (state.searchQuery.trim() && state.activePanel !== "catalog") openDrawer("catalog");
     refreshWorkspace();
   });
 
@@ -1392,7 +1425,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".os-cat-pill").forEach(btn => {
     btn.addEventListener("click", () => {
       state.activeCategory = btn.dataset.cat || "ALL";
-      document.querySelectorAll(".os-cat-pill").forEach(b => b.classList.toggle("active", b === btn));
+      state.catalogLimit = CATALOG_PAGE_SIZE;
+      if (state.activePanel !== "catalog") openDrawer("catalog");
+      syncFilingFilters();
       refreshWorkspace();
     });
   });
