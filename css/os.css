@@ -1,6 +1,6 @@
 /* ==========================================================================
    TIERED SYSTEMS · OPPORTUNITY RADAR STYLESHEET
-   Obsidian glass · Gold controls and edge highlights
+   Obsidian glass · Orange controls and gold highlights
    ========================================================================== */
 
 :root {
@@ -214,7 +214,7 @@ html, body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--gold-fill);
+  background: var(--orange-fill);
   color: var(--gold-ink);
   display: grid;
   place-items: center;
@@ -298,14 +298,14 @@ html, body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--gold-fill);
+  background: var(--orange-fill);
   border: 0;
   display: grid;
   place-items: center;
   flex-shrink: 0;
   transition: background 150ms ease, transform 150ms var(--ease-spring);
 }
-.os-brand-badge:hover { background: var(--gold-pale); }
+.os-brand-badge:hover { background: var(--orange-ink); }
 .os-brand-badge:active { transform: scale(0.985); }
 .os-brand-badge svg { width: 20px; height: 20px; fill: none; stroke: var(--gold-ink); stroke-width: 1.9; }
 
@@ -392,7 +392,7 @@ html, body {
 }
 .os-cat-pill:hover { background: var(--gold-sheen), var(--os-glass-dense); transform: translateY(-1px); }
 .os-cat-pill:active { transform: scale(0.985); }
-.os-cat-pill.active { background: var(--gold-fill); color: var(--gold-ink); }
+.os-cat-pill.active { background: var(--orange-fill); color: var(--gold-ink); }
 
 /* Left Floating Navigation Rail ------------------------------------------ */
 .os-nav-rail {
@@ -725,7 +725,7 @@ html, body {
   transition: background 150ms ease;
 }
 .os-mini-card:hover { background: var(--os-sub-card-hover); }
-.os-mini-card.selected { background: rgba(237, 186, 101, 0.14); box-shadow: inset 0 0 0 1px var(--gold-edge); }
+.os-mini-card.selected { background: var(--orange-wash); box-shadow: inset 0 0 0 1px var(--orange-edge); }
 
 .os-mini-top { display: flex; align-items: center; gap: 10px; }
 .os-monogram {
@@ -831,13 +831,13 @@ html, body {
   gap: 7px;
   padding: 5px 11px;
   border-radius: var(--radius-pill);
-  background: rgba(237, 186, 101, 0.13);
+  background: var(--orange-wash);
   border: 0;
-  color: var(--gold);
+  color: var(--orange-ink);
   font-size: 0.72rem;
   font-weight: 700;
 }
-.os-verified-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+.os-verified-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
 .os-inspector-results[hidden] { display: none; }
 .os-inspector-results { white-space: nowrap; }
 .os-inspector-topbar-actions { display: flex; align-items: center; gap: 6px; }

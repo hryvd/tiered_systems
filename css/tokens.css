@@ -1,6 +1,6 @@
 /* ==========================================================================
    TIERED SYSTEMS · SHARED DESIGN TOKENS & BASE PRIMITIVES
-   Obsidian glass · Warm gold highlights
+   Obsidian glass · Burnt orange and gold highlights
    ========================================================================== */
 
 :root {
@@ -32,6 +32,11 @@
   --accent-hover: #f2681d;
   --accent-subtle: rgba(232, 89, 12, 0.15);
 
+  --orange-ink: #ffa764;
+  --orange-fill: linear-gradient(115deg, #e86a22, #ffab60 56%, #f37a36);
+  --orange-edge: rgba(248, 139, 73, 0.34);
+  --orange-wash: rgba(232, 89, 12, 0.14);
+
   --gold: #edba65;
   --gold-pale: #ffe7aa;
   --gold-deep: #b8741d;
@@ -40,7 +45,7 @@
   --gold-edge: rgba(240, 190, 110, 0.25);
   --gold-sheen: linear-gradient(128deg, rgba(246, 188, 91, 0.115), rgba(239, 180, 78, 0.025) 46%, transparent 70%);
   --gold-glass-edge: inset 0 1px 0 var(--gold-edge), inset 0 -1px 0 rgba(239, 183, 86, 0.08);
-  --gold-launch: linear-gradient(90deg, var(--gold-deep), var(--gold-pale) 50%, var(--gold-deep));
+  --gold-launch: linear-gradient(90deg, var(--accent), var(--gold-pale) 50%, var(--gold-deep));
 
   --cta-bg: #f7f7f8;
   --cta-hover: #e0e0e5;
@@ -244,7 +249,7 @@ button, input, select, a {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--gold-fill);
+  background: var(--orange-fill);
   display: grid;
   place-items: center;
   flex-shrink: 0;
