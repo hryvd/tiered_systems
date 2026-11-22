@@ -42,7 +42,7 @@
             <span class="admin-brand-word">Tiered Systems</span>
             <span class="admin-role-pill">Administrator</span>
           </div>
-          <p class="admin-brand-sub">Direct workspace settings · No login required</p>
+          <p class="admin-brand-sub">Workspace settings for this browser</p>
         </div>
       </div>
 
@@ -56,10 +56,10 @@
   <main id="admin-main" class="admin-container admin-main">
     <section class="admin-hero-head">
       <div>
-        <p class="admin-kicker">OPPORTUNITY RADAR · CONTROL PLANE</p>
         <h1>Administrator Settings</h1>
-        <p class="admin-lede">Configure default map appearance, live Google Sheets CSV ingestion, and MOA partner records across the directory.</p>
+        <p class="admin-lede">Set your map defaults, connect a published Google Sheet, or add local partner pins.</p>
       </div>
+      <a href="#admin-directory" class="admin-btn-ghost">Browse agreements &darr;</a>
     </section>
 
     <!-- Live KPI Summary -->
@@ -67,7 +67,7 @@
       <article class="admin-kpi-card admin-glass">
         <span class="admin-kpi-label">Agreement Records</span>
         <strong class="admin-kpi-val num" id="admin-kpi-total">—</strong>
-        <span class="admin-kpi-note">Total on radar</span>
+        <span class="admin-kpi-note">Searchable in the Radar</span>
       </article>
       <article class="admin-kpi-card admin-glass">
         <span class="admin-kpi-label">Custom Local Pins</span>
@@ -99,7 +99,7 @@
           <div class="admin-card-body">
             <div>
               <span class="admin-section-label">Default Basemap Style</span>
-              <div class="admin-seg-grid" id="admin-basemap-pills">
+              <div class="admin-seg-grid" id="admin-basemap-pills" role="group" aria-label="Default map style">
                 <button type="button" class="admin-seg-btn" data-basemap="atlas">Atlas</button>
                 <button type="button" class="admin-seg-btn" data-basemap="satellite">Satellite</button>
                 <button type="button" class="admin-seg-btn" data-basemap="dark">Obsidian</button>
@@ -110,7 +110,7 @@
             <div class="admin-toggle-row">
               <div>
                 <div class="admin-toggle-title">Distance Radius Ring</div>
-                <div class="admin-toggle-sub">Render dashed km circle around active campus node</div>
+                <div class="admin-toggle-sub">Show the selected distance around your campus</div>
               </div>
               <button
                 type="button"
@@ -165,7 +165,7 @@
       <article class="admin-card admin-glass">
         <header class="admin-card-head">
           <h2>Add MOA Partner</h2>
-          <p>Publish a new industry partner directly to the Opportunity Radar satellite map.</p>
+          <p>Add a partner to the Radar in this browser.</p>
         </header>
 
         <div class="admin-card-body">
@@ -266,17 +266,22 @@
     </section>
 
     <!-- Active Partner Directory Manager -->
-    <section class="admin-card admin-glass admin-directory-card" aria-label="Partner directory">
+    <section class="admin-card admin-glass admin-directory-card" id="admin-directory" aria-labelledby="admin-directory-title">
       <header class="admin-dir-head">
         <div>
-          <h2>MOA Partner Directory</h2>
-          <p id="admin-dir-count" class="admin-dir-sub">Loading agreement records…</p>
+          <h2 id="admin-directory-title">MOA Partner Directory</h2>
+          <p id="admin-dir-count" class="admin-dir-sub" role="status">Loading agreement records…</p>
         </div>
         <div class="admin-dir-search-wrap">
           <label for="admin-dir-search" class="visually-hidden">Filter partner directory</label>
-          <input type="search" id="admin-dir-search" class="admin-input" placeholder="Filter by organization, filing status, or register #…" autocomplete="off" />
+          <input type="search" id="admin-dir-search" class="admin-input" placeholder="Search agreements…" autocomplete="off" />
         </div>
       </header>
+
+      <nav class="admin-dir-pages" id="admin-dir-pages" aria-label="Agreement pages" hidden>
+        <button type="button" class="admin-btn-ghost" id="admin-dir-prev" aria-label="Previous page of agreements">&larr; Previous</button>
+        <button type="button" class="admin-btn-ghost" id="admin-dir-next" aria-label="Next page of agreements">Next &rarr;</button>
+      </nav>
 
       <div class="admin-table-wrap">
         <table class="admin-table">

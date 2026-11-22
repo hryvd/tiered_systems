@@ -1,12 +1,11 @@
 /* ==========================================================================
    TIERED SYSTEMS · ADMINISTRATOR WORKSPACE STYLESHEET
-   Obsidian Black Primary (#09090b) · Frosted Black Glass · White Text
-   Burnt Orange Accent (#E8590C) · Edge Refraction · Zero Strokes/Shadows
+   Obsidian glass · Gold controls and edge highlights
    ========================================================================== */
 
 body {
   min-height: 100dvh;
-  background: var(--surface-base);
+  background: radial-gradient(ellipse at 24% 0%, rgba(200, 133, 42, 0.09), transparent 50%), var(--surface-base);
   color: #ffffff;
   font-size: var(--text-base);
   line-height: 1.55;
@@ -22,7 +21,8 @@ body {
 
 /* Frosted Black Glass Cards + Edge Refraction ---------------------------- */
 .admin-glass {
-  background: rgba(14, 14, 18, 0.72);
+  background: var(--gold-sheen), rgba(14, 14, 18, 0.82);
+  box-shadow: var(--gold-glass-edge);
   backdrop-filter: blur(22px) saturate(165%);
   -webkit-backdrop-filter: blur(22px) saturate(165%);
   border: 0;
@@ -75,10 +75,10 @@ body {
   top: 0;
   z-index: 60;
   padding-top: env(safe-area-inset-top);
-  background: rgba(9, 9, 11, 0.74);
+  background: var(--gold-sheen), rgba(9, 9, 11, 0.86);
   backdrop-filter: blur(22px) saturate(165%);
   -webkit-backdrop-filter: blur(22px) saturate(165%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--gold-edge);
 }
 
 .admin-topbar-inner {
@@ -100,15 +100,15 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--gold-fill);
   display: grid;
   place-items: center;
   flex-shrink: 0;
   transition: background 150ms ease, transform 150ms var(--ease-spring);
 }
-.admin-brand-badge:hover { background: var(--accent-hover); }
+.admin-brand-badge:hover { background: var(--gold-pale); }
 .admin-brand-badge:active { transform: scale(0.985); }
-.admin-brand-badge svg { width: 20px; height: 20px; fill: none; stroke: #ffffff; stroke-width: 1.9; }
+.admin-brand-badge svg { width: 20px; height: 20px; fill: none; stroke: var(--gold-ink); stroke-width: 1.9; }
 
 .admin-brand-row {
   display: flex;
@@ -128,8 +128,8 @@ body {
 .admin-role-pill {
   padding: 3px 9px;
   border-radius: var(--radius-pill);
-  background: var(--accent-subtle);
-  color: var(--accent);
+  background: rgba(237, 186, 101, 0.13);
+  color: var(--gold);
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 700;
@@ -162,14 +162,6 @@ body {
   justify-content: space-between;
   align-items: flex-end;
   gap: 16px;
-}
-
-.admin-kicker {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--accent);
-  margin-bottom: 6px;
 }
 
 .admin-hero-head h1 {
@@ -220,7 +212,7 @@ body {
 
 .admin-kpi-source {
   font-size: 1rem;
-  color: var(--accent);
+  color: var(--gold);
   padding-top: 6px;
 }
 
@@ -306,7 +298,7 @@ body {
 }
 .admin-seg-btn:hover { background: rgba(255, 255, 255, 0.16); }
 .admin-seg-btn:active { transform: scale(0.985); }
-.admin-seg-btn.active { background: var(--accent); color: #ffffff; font-weight: 700; }
+.admin-seg-btn.active { background: var(--gold-fill); color: var(--gold-ink); font-weight: 700; }
 
 .admin-toggle-row {
   display: flex;
@@ -344,7 +336,7 @@ body {
   background: #ffffff;
   transition: transform 180ms var(--ease-spring);
 }
-.admin-switch[aria-checked="true"] { background: var(--accent); }
+.admin-switch[aria-checked="true"] { background: var(--gold-fill); }
 .admin-switch[aria-checked="true"]::after { transform: translateX(20px); }
 
 /* Forms, Buttons & Presets ----------------------------------------------- */
@@ -382,8 +374,8 @@ body {
   padding: 0 18px;
   border-radius: var(--radius-pill);
   border: 0;
-  background: var(--accent);
-  color: #ffffff;
+  background: var(--gold-fill);
+  color: var(--gold-ink);
   font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
@@ -394,7 +386,7 @@ body {
   cursor: pointer;
   transition: background 150ms ease, transform 150ms var(--ease-spring);
 }
-.admin-btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.admin-btn-primary:hover { background: var(--gold-pale); transform: translateY(-1px); }
 .admin-btn-primary:active { transform: scale(0.985); }
 
 .admin-btn-ghost {
@@ -442,7 +434,7 @@ body {
   cursor: pointer;
   transition: background 150ms ease;
 }
-.admin-preset-chip:hover { background: var(--accent); }
+.admin-preset-chip:hover { background: var(--gold-fill); color: var(--gold-ink); }
 
 /* Directory Table -------------------------------------------------------- */
 .admin-dir-head {
@@ -470,6 +462,21 @@ body {
 .admin-dir-search-wrap {
   width: min(360px, 100%);
 }
+
+#admin-directory { scroll-margin-top: 100px; }
+
+.admin-dir-pages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--gold-edge);
+}
+
+.admin-dir-pages[hidden] { display: none; }
+.admin-dir-pages button:disabled { opacity: 0.45; cursor: default; }
+.admin-dir-pages button:disabled:hover { transform: none; }
 
 .admin-table-wrap {
   width: 100%;
@@ -528,8 +535,8 @@ body {
 }
 
 .admin-origin-pill.is-custom {
-  background: var(--accent-subtle);
-  color: var(--accent);
+  background: rgba(237, 186, 101, 0.13);
+  color: var(--gold);
 }
 
 .admin-muted-txt {
@@ -612,7 +619,13 @@ body {
   .admin-topbar-inner { padding-block: 10px; flex-wrap: wrap; }
   .admin-nav-actions { width: 100%; }
   .admin-nav-actions a { flex: 1; }
+  .admin-hero-head { align-items: flex-start; flex-direction: column; }
+  #admin-directory { scroll-margin-top: 132px; }
   .admin-field-grid-2,
   .admin-field-grid-3,
   .admin-seg-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
 }

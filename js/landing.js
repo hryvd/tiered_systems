@@ -266,6 +266,9 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
     const tabs = Array.from(document.querySelectorAll(".tier-tab"));
     if (!tabs.length) return;
 
+    const stageButtons = document.querySelectorAll(".tier-stage-btn");
+    const detailsLink = document.getElementById("tier-details-link");
+
     function select(tab, focus) {
       const tierNum = parseInt(tab.dataset.tier, 10) || 1;
 
@@ -277,15 +280,12 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
         if (panel) panel.hidden = !on;
       });
 
-      // Synchronize with 3D model
-      if (typeof window.set3DActiveTier === "function") {
-        window.set3DActiveTier(tierNum);
-      }
-
-      // Sync stage buttons in 3D section
-      document.querySelectorAll(".tier-stage-btn, .orbit-stage-item").forEach(btn => {
-        const stageNum = parseInt(btn.dataset.stageTier || btn.dataset.orbitTier, 10);
-        btn.classList.toggle("active", stageNum === tierNum);
+      if (detailsLink) detailsLink.hash = tab.id;
+      window.set3DActiveTier?.(tierNum);
+      stageButtons.forEach(button => {
+        const isActive = Number(button.dataset.stageTier) === tierNum;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
       });
 
       if (focus) tab.focus();
@@ -303,23 +303,19 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
       });
     });
 
-    // Tier stage click triggers (synchronized with 3D model and Roadmap tabs)
-    document.querySelectorAll(".tier-stage-btn, .orbit-stage-item").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const tierNum = parseInt(btn.dataset.stageTier || btn.dataset.orbitTier, 10);
-        document.querySelectorAll(".tier-stage-btn, .orbit-stage-item").forEach(b => {
-          b.classList.toggle("active", b === btn);
-          if (b.hasAttribute("aria-pressed")) b.setAttribute("aria-pressed", String(b === btn));
-        });
-
-        if (typeof window.set3DActiveTier === "function") {
-          window.set3DActiveTier(tierNum);
-        }
-
-        const correspondingTab = document.querySelector(`.tier-tab[data-tier="${tierNum}"]`);
-        if (correspondingTab) select(correspondingTab, false);
+    stageButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const tab = tabs.find(item => item.dataset.tier === button.dataset.stageTier);
+        if (tab) select(tab, false);
       });
     });
+
+    const selectLinkedTier = () => {
+      const tab = tabs.find(item => location.hash === `#${item.id}`);
+      if (tab && tab.getAttribute("aria-selected") !== "true") select(tab, false);
+    };
+    selectLinkedTier();
+    window.addEventListener("hashchange", selectLinkedTier);
   }
 
   /* Data-driven sections & Dynamic Landing Filter ------------------------ */
@@ -335,6 +331,7 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
     const list = document.getElementById("preview-list");
     if (!list) return;
 
+    document.getElementById("preview-campus-name").textContent = origin.shortName;
     const nearest = companies.filter(hasCoordinates)
       .map(c => ({ c, km: haversineKm(origin, c) }))
       .sort((a, b) => a.km - b.km)
@@ -356,7 +353,9 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
 
   function renderStatusTable(companies) {
     const total = document.getElementById("table-total-slots");
-    if (total) total.textContent = `${companies.length.toLocaleString()} records`;
+    const count = companies.length;
+    const recordCount = `${count.toLocaleString()} ${count === 1 ? "agreement" : "agreements"}`;
+    if (total && total.textContent !== recordCount) total.textContent = recordCount;
     const tbody = document.getElementById("hub-table");
     if (!tbody) return;
 
@@ -377,7 +376,7 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
       .sort((a, b) => b[1].agreements - a[1].agreements)
       .map(([status, { agreements, mapped }]) => `
         <tr>
-          <td>${escapeHtml(status)}</td>
+          <th scope="row">${escapeHtml(status)}</th>
           <td class="t-right num">${agreements.toLocaleString()}</td>
           <td class="t-right num">${mapped}</td>
         </tr>`)
@@ -390,7 +389,7 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
 
     const mapped = companies.filter(hasCoordinates);
     const count = document.getElementById("preview-count");
-    if (count) count.textContent = `${mapped.length} mapped ${mapped.length === 1 ? "partner" : "partners"}`;
+    if (count) count.textContent = `${mapped.length.toLocaleString()} of ${companies.length.toLocaleString()} mapped`;
     if (!document.getElementById("preview-map")) return;
     if (!window.L) {
       skeleton?.classList.add("is-unavailable");
@@ -435,6 +434,8 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
     const status = document.getElementById("landing-filter-program")?.value || "all";
     const campusKey = document.getElementById("landing-filter-campus")?.value || "alangilan";
     const origin = CAMPUSES[campusKey] || CAMPUSES.alangilan;
+    const reset = document.getElementById("landing-filter-reset");
+    if (reset) reset.hidden = status === "all" && campusKey === "alangilan";
 
     const filtered = cachedCompanies.filter(c => {
       return status === "all" || filingStatus(c).toUpperCase() === status;
@@ -452,12 +453,22 @@ import { DatabaseService, CAMPUSES, filingStatus, hasCoordinates } from "./datab
       renderFacts(companies);
       filterLandingData();
 
-      // Bind filter controls
-      document.getElementById("landing-filter-program")?.addEventListener("change", filterLandingData);
-      document.getElementById("landing-filter-campus")?.addEventListener("change", filterLandingData);
+      const status = document.getElementById("landing-filter-program");
+      const campus = document.getElementById("landing-filter-campus");
+      status.addEventListener("change", filterLandingData);
+      campus.addEventListener("change", filterLandingData);
+      document.getElementById("landing-filter-reset")?.addEventListener("click", () => {
+        status.value = "all";
+        campus.value = "alangilan";
+        status.focus();
+        filterLandingData();
+      });
     } catch (err) {
       const list = document.getElementById("preview-list");
-      if (list) list.innerHTML = '<li class="preview-item"><span class="preview-name">Explore full directory on the board.</span></li>';
+      if (list) list.innerHTML = '<li class="preview-item"><span class="preview-name">Open Opportunity Radar to browse the directory.</span></li>';
+      document.getElementById("preview-count").textContent = "Partners unavailable";
+      document.getElementById("table-total-slots").textContent = "Agreements unavailable";
+      document.getElementById("hub-table").innerHTML = '<tr><td colspan="3">Could not load the agreement summary.</td></tr>';
       document.getElementById("map-skeleton")?.classList.add("is-unavailable");
     }
   }

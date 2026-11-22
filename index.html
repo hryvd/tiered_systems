@@ -34,10 +34,11 @@
           sessionStorage.removeItem("ts_os_launch_morph");
           return;
         }
+        sessionStorage.removeItem("ts_os_launch_morph");
         document.documentElement.classList.add("os-launch-entering");
         window.setTimeout(function () {
           document.documentElement.classList.remove("os-launch-entering");
-        }, 7000);
+        }, 650);
       } catch (_) {}
     })();
   </script>
@@ -76,21 +77,24 @@
           </svg>
         </a>
 
-        <label for="os-search-input" class="visually-hidden">Search MOA records</label>
+        <label for="os-search-input" class="visually-hidden">Search by organization, agreement number, or filing status</label>
         <span class="os-search-label" aria-hidden="true">SEARCH</span>
 
         <input
           type="search"
           id="os-search-input"
           class="os-search-input"
-          placeholder="Search companies or agreements…"
+          placeholder="Find an agreement…"
           autocomplete="off"
           spellcheck="false"
         />
 
         <button type="button" class="os-search-clear" id="os-search-clear" aria-label="Clear search" hidden>&times;</button>
 
-        <span class="os-result-pill num" id="os-result-pill" aria-live="polite">— MOAs</span>
+        <button type="button" class="os-result-pill num" id="os-browse-results" aria-controls="os-drawer" aria-expanded="false">
+          <span class="visually-hidden">Browse agreements: </span><span id="os-result-pill" aria-live="polite"><span id="os-result-count">—</span><span class="os-result-detail" id="os-result-detail"> MOAs</span></span>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4" /></svg>
+        </button>
 
         <a href="./program.html" class="os-program-link" title="View the 4-Tier Readiness Program & Schedule">
           <span>4 Tiers</span>
@@ -106,15 +110,16 @@
         <button type="button" class="os-cat-pill glass-pill" data-cat="FOR NOTARIZATION" aria-pressed="false">For notarization</button>
         <button type="button" class="os-cat-pill glass-pill" data-cat="SIGNED" aria-pressed="false">Signed</button>
         <button type="button" class="os-cat-pill glass-pill" data-cat="FOR SIGNATURE (COMPANY)" aria-pressed="false">For company signature</button>
+        <button type="button" class="os-cat-pill glass-pill" data-cat="STATUS NOT LISTED" aria-pressed="false">Status not listed</button>
       </div>
     </header>
 
     <!-- Left Floating Navigation Rail (Desktop / Tablet) -->
     <nav class="os-nav-rail glass-surface" id="os-nav-rail" aria-label="Opportunity Radar modules">
       <div class="os-rail-group">
-        <button type="button" class="os-nav-btn" data-panel="distance" title="Campus distance &amp; discipline filters">
+        <button type="button" class="os-nav-btn" data-panel="distance" title="Campus distance and other filters">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2" /></svg>
-          <span>DISTANCE</span>
+          <span>FILTERS</span>
         </button>
         <button type="button" class="os-nav-btn" data-panel="catalog" title="Browse full MOA partner catalog">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></svg>
@@ -122,7 +127,7 @@
         </button>
         <button type="button" class="os-nav-btn" data-panel="ai" title="AI Partner Matcher">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" /><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z" /></svg>
-          <span>AI AGENT</span>
+          <span>MATCHER</span>
         </button>
       </div>
 
@@ -145,12 +150,12 @@
     </nav>
 
     <!-- Floating Contextual Tool Drawer -->
-    <section class="os-drawer glass-surface" id="os-drawer" aria-label="Active workspace tool" hidden>
+    <section class="os-drawer glass-surface" id="os-drawer" aria-labelledby="os-drawer-title" hidden>
       <header class="os-drawer-head">
         <div class="os-sheet-grabber" aria-hidden="true"></div>
         <div class="os-drawer-title-row">
           <div>
-            <h2 id="os-drawer-title">Tool Panel</h2>
+            <h2 id="os-drawer-title" tabindex="-1">Tool Panel</h2>
             <p id="os-drawer-subtitle" class="os-drawer-sub">Configure Opportunity Radar</p>
           </div>
           <button type="button" class="os-icon-btn" id="btn-drawer-close" aria-label="Close panel">&times;</button>
@@ -172,6 +177,7 @@
           <span>Agreement details</span>
         </span>
         <div class="os-inspector-topbar-actions">
+          <button type="button" class="os-inspector-results os-btn-ghost" id="btn-inspector-results" aria-label="Back to results" hidden>&larr; Results</button>
           <button type="button" class="os-icon-btn" id="btn-inspector-bookmark" aria-label="Save partner to shortlist" title="Save to shortlist">☆</button>
           <button type="button" class="os-icon-btn" id="btn-inspector-toggle" aria-label="Minimize partner inspector" title="Minimize inspector">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
@@ -245,7 +251,7 @@
     <nav class="os-mobile-dock glass-surface" id="os-mobile-dock" aria-label="Mobile Opportunity Radar tools">
       <button type="button" class="os-dock-btn" data-panel="distance">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2" /></svg>
-        <span>Distance</span>
+        <span>Filters</span>
       </button>
       <button type="button" class="os-dock-btn" data-panel="catalog">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></svg>
@@ -253,7 +259,7 @@
       </button>
       <button type="button" class="os-dock-btn" data-panel="ai">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" /></svg>
-        <span>AI Agent</span>
+        <span>Matcher</span>
       </button>
       <button type="button" class="os-dock-btn" data-panel="inventory">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19v-4" /></svg>

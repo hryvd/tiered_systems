@@ -2,13 +2,13 @@
  * TIERED SYSTEMS · Opportunity Radar Launch Morph Transition
  * Morphs any clicked [data-os-launch] CTA button into the exact screen geometry
  * of the Opportunity Radar .os-search-pill search bar, blooms with a luminous
- * burnt-orange/white glow while fading the backdrop to #09090b, then hands off
+ * warm gold glow while fading the backdrop to #09090b, then hands off
  * across navigation via sessionStorage so index.html fades the glow directly into
  * the live search bar.
  */
 
 const LAUNCH_STORAGE_KEY = "ts_os_launch_morph";
-const NAVIGATE_DELAY_MS = 720;
+const NAVIGATE_DELAY_MS = 360;
 
 let isLaunching = false;
 
@@ -93,7 +93,7 @@ function createMorphPill(startRect, bgColor, textColor, labelText) {
       </svg>
     </span>
     <span class="os-launch-ghost-label">SEARCH</span>
-    <span class="os-launch-ghost-placeholder">Companies, Batangas hubs, CpE/ECE, MOA ref…</span>
+    <span class="os-launch-ghost-placeholder">Find an agreement…</span>
   `;
 
   const flash = document.createElement("div");
@@ -129,9 +129,7 @@ function handleLaunchClick(e, link) {
   const startRect = link.getBoundingClientRect();
   const targetRect = computeTargetSearchRect();
   const computed = window.getComputedStyle(link);
-  const bgColor = computed.backgroundColor && computed.backgroundColor !== "rgba(0, 0, 0, 0)"
-    ? computed.backgroundColor
-    : "#f7f7f8";
+  const bgColor = computed.backgroundImage !== "none" ? computed.backgroundImage : computed.backgroundColor;
   const textColor = computed.color || "#09090b";
   const labelText = (link.textContent || "Open Opportunity Radar").replace(/\s+/g, " ").trim();
 

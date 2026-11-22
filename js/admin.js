@@ -7,11 +7,13 @@ import "./glass-warp.js";
 import "./os-transition.js";
 import { DatabaseService, downloadCompaniesCsv, filingStatus, formatAgreementDate, hasCoordinates } from "./database.js";
 
+const PAGE_SIZE = 30;
 const adminState = {
   companies: [],
   customIds: new Set(),
   source: "loading",
   searchQuery: "",
+  page: 0,
   prefs: DatabaseService.getPrefs()
 };
 
@@ -51,7 +53,9 @@ function syncPreferenceControls() {
   const showRadius = adminState.prefs.showRadius !== false;
 
   document.querySelectorAll("#admin-basemap-pills .admin-seg-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.basemap === basemap);
+    const selected = btn.dataset.basemap === basemap;
+    btn.classList.toggle("active", selected);
+    btn.setAttribute("aria-pressed", String(selected));
   });
 
   const radiusSwitch = document.getElementById("admin-radius-ring-toggle");
@@ -96,16 +100,25 @@ function renderDirectoryTable() {
     return haystack.includes(q);
   });
 
-  if (countEl) {
-    countEl.textContent = `${visible.length} of ${adminState.companies.length} agreements shown`;
-  }
+  const lastPage = Math.max(0, Math.ceil(visible.length / PAGE_SIZE) - 1);
+  adminState.page = Math.min(adminState.page, lastPage);
+  const start = PAGE_SIZE * adminState.page;
+  const end = Math.min(start + PAGE_SIZE, visible.length);
+  document.getElementById("admin-dir-pages").hidden = lastPage === 0;
+  document.getElementById("admin-dir-prev").disabled = adminState.page === 0;
+  document.getElementById("admin-dir-next").disabled = adminState.page === lastPage;
+  countEl.textContent = visible.length
+    ? `${(start + 1).toLocaleString()}–${end.toLocaleString()} of ${visible.length.toLocaleString()} agreements`
+    : "No matching agreements";
 
   if (visible.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="admin-empty-cell">No partners match "${escapeHtml(adminState.searchQuery)}".</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="admin-empty-cell">${
+      q ? "Try a different organization, filing status, or register number." : "No agreements are available."
+    }</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = visible
+  tbody.innerHTML = visible.slice(start, end)
     .map(c => {
       const isCustom = adminState.customIds.has(c.id);
       const registerEntry = Boolean(c.registerNumber);
@@ -215,6 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("admin-export-csv")?.addEventListener("click", exportDirectoryCSV);
 
   document.getElementById("admin-reset-cache")?.addEventListener("click", async () => {
+    if (!window.confirm("Remove local partner pins and disconnect the Google Sheets feed in this browser?")) return;
     DatabaseService.clearCustomCompanies();
     DatabaseService.setSheetUrl("");
     if (sheetInput) sheetInput.value = "";
@@ -277,6 +291,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("admin-dir-search")?.addEventListener("input", e => {
     adminState.searchQuery = e.target.value;
+    adminState.page = 0;
+    renderDirectoryTable();
+  });
+  document.getElementById("admin-dir-prev").addEventListener("click", () => {
+    adminState.page -= 1;
+    renderDirectoryTable();
+  });
+  document.getElementById("admin-dir-next").addEventListener("click", () => {
+    adminState.page += 1;
     renderDirectoryTable();
   });
 });

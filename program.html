@@ -37,7 +37,7 @@
       </a>
 
       <nav class="nav-links" id="primary-nav-links" aria-label="Primary">
-        <a href="#emblem-showcase">Program Tiers</a>
+        <a href="#emblem-showcase">Tier showcase</a>
         <a href="#tiers">Roadmap</a>
         <a href="#board">Opportunity Radar</a>
         <a href="#schedule">Schedule</a>
@@ -74,8 +74,8 @@
             <span>CURSOR, BatStateU Alangilan</span>
           </p>
 
-          <p class="section-tag">OPPORTUNITY INTELLIGENCE · 2026</p>
-          <h1 class="hero-title">Find the work that moves you forward.</h1>
+          <p class="section-tag">Computer Engineering career program</p>
+          <h1 class="hero-title">Find the work that <span class="hero-highlight">moves you forward.</span></h1>
 
           <p class="hero-lede">
             A career readiness program for BatStateU engineers. Develop your portfolio, learn from industry and alumni, and discover partners for face-to-face OJT.
@@ -86,7 +86,7 @@
               Open Opportunity Radar
               <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
             </a>
-            <a href="#emblem-showcase" class="btn btn-ghost btn-lg">Explore the 4 Tiers</a>
+            <a href="#emblem-showcase" class="btn btn-ghost btn-lg">Explore the four tiers</a>
           </div>
 
           <p class="event-status" id="event-status" role="status" aria-live="polite">
@@ -96,17 +96,21 @@
         </div>
 
         <!-- Opportunity Radar Preview -->
-        <a href="./index.html" class="product-frame js-tilt" aria-label="Open Opportunity Radar" data-tilt-max="5">
+        <a href="./index.html" class="product-frame js-tilt" aria-label="Open Opportunity Radar" data-tilt-max="3">
           <div class="frame-bar">
             <span class="frame-title"><span class="status-dot-mini" aria-hidden="true"></span>Opportunity Radar</span>
-            <span class="frame-meta num" id="preview-count">— mapped partners</span>
+            <span class="frame-meta num" id="preview-count">Loading partners…</span>
           </div>
           <div class="frame-body">
             <div class="preview-map-wrap">
               <div id="preview-map" class="preview-map" aria-hidden="true"></div>
               <div class="map-skeleton" id="map-skeleton"><span>Map preview unavailable</span></div>
             </div>
-            <ol class="preview-list" id="preview-list" aria-label="Mapped companies by distance from the selected campus">
+            <div class="preview-map-key" role="group" aria-label="Map legend">
+              <span><span class="preview-campus" aria-hidden="true"></span><span id="preview-campus-name">Alangilan Campus</span></span>
+              <span><span class="preview-pin" aria-hidden="true"></span>Mapped partner</span>
+            </div>
+            <ol class="preview-list" id="preview-list" aria-label="Mapped partners by distance">
               <li class="preview-item is-loading"><span class="sk sk-w70"></span><span class="sk sk-w30"></span></li>
               <li class="preview-item is-loading"><span class="sk sk-w60"></span><span class="sk sk-w30"></span></li>
             </ol>
@@ -149,33 +153,34 @@
           <div class="tier-stages-list" role="group" aria-label="Select a progression tier">
             <button type="button" class="tier-stage-btn active" data-stage-tier="1" aria-pressed="true">
               <span class="stage-num num">T1</span>
-              <div>
+              <span class="stage-copy">
                 <strong>Tier 01: Prepare</strong>
-                <p>Technical resume overhaul &amp; verifiable project artifact (code, circuit, CAD).</p>
-              </div>
+                <span class="stage-description">Technical resume overhaul &amp; verifiable project artifact (code, circuit, CAD).</span>
+              </span>
             </button>
             <button type="button" class="tier-stage-btn" data-stage-tier="2" aria-pressed="false">
               <span class="stage-num num">T2</span>
-              <div>
+              <span class="stage-copy">
                 <strong>Tier 02: Level Up</strong>
-                <p>LinkedIn digital architecture &amp; 45-second technical elevator pitch.</p>
-              </div>
+                <span class="stage-description">LinkedIn digital architecture &amp; 45-second technical elevator pitch.</span>
+              </span>
             </button>
             <button type="button" class="tier-stage-btn" data-stage-tier="3" aria-pressed="false">
               <span class="stage-num num">T3</span>
-              <div>
+              <span class="stage-copy">
                 <strong>Tier 03: Discover</strong>
-                <p>Industry plenary address &amp; alumni engineering career benchmarks.</p>
-              </div>
+                <span class="stage-description">Industry plenary address &amp; alumni engineering career benchmarks.</span>
+              </span>
             </button>
             <button type="button" class="tier-stage-btn" data-stage-tier="4" aria-pressed="false">
               <span class="stage-num num">T4</span>
-              <div>
+              <span class="stage-copy">
                 <strong>Tier 04: Connect</strong>
-                <p>Opportunity Radar station &amp; OJT partner company matching.</p>
-              </div>
+                <span class="stage-description">Opportunity Radar station &amp; OJT partner company matching.</span>
+              </span>
             </button>
           </div>
+          <a class="section-link" id="tier-details-link" href="#tab-1">See tier schedule and deliverables <span aria-hidden="true">↓</span></a>
         </div>
 
         <div class="emblem-canvas-wrap">
@@ -236,7 +241,7 @@
           </div>
 
           <div class="tier-panels">
-            <article class="tier-panel js-tilt" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
+            <article class="tier-panel js-tilt" role="tabpanel" tabindex="0" id="panel-1" aria-labelledby="tab-1">
               <div class="tier-panel-copy">
                 <h3>Resume and technical portfolio</h3>
                 <p>Mentor-led session on resume formatting and documenting one technical project you actually built. Feedback covers readability, relevant skills, verifiable contributions, and project documentation.</p>
@@ -251,7 +256,7 @@
               </div>
             </article>
 
-            <article class="tier-panel js-tilt" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden>
+            <article class="tier-panel js-tilt" role="tabpanel" tabindex="0" id="panel-2" aria-labelledby="tab-2" hidden>
               <div class="tier-panel-copy">
                 <h3>LinkedIn and technical pitching</h3>
                 <p>Tighten your professional profile, drill a 45–60 second introduction, and draft a 3-to-6-month career roadmap with real-time peer and mentor feedback.</p>
@@ -266,7 +271,7 @@
               </div>
             </article>
 
-            <article class="tier-panel js-tilt" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden>
+            <article class="tier-panel js-tilt" role="tabpanel" tabindex="0" id="panel-3" aria-labelledby="tab-3" hidden>
               <div class="tier-panel-copy">
                 <h3>Industry expectations &amp; alumni panel</h3>
                 <p>An industry plenary on hiring standards and OJT requirements, followed by a moderated panel with CpE alumni and corporate engineers. You leave with one career path picked and the competencies it needs written down.</p>
@@ -281,7 +286,7 @@
               </div>
             </article>
 
-            <article class="tier-panel js-tilt" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden>
+            <article class="tier-panel js-tilt" role="tabpanel" tabindex="0" id="panel-4" aria-labelledby="tab-4" hidden>
               <div class="tier-panel-copy">
                 <h3>Opportunity Radar and Resource Vault</h3>
                 <p>Career conversations with alumni and engineers, access to the OJT partner directory, and curated software licenses and certification resources. Record one opportunity and one concrete follow-up before leaving.</p>
@@ -305,7 +310,7 @@
       <div class="container board-grid">
         <div class="board-copy">
           <h2 id="board-title" class="section-title">Explore OJT partners</h2>
-          <p class="section-lede">Browse in-person OJT agreements from the university’s MOA filing records. Filter the agreements by filing status or change the campus used for distances in the map preview.</p>
+          <p class="section-lede">Preview the university’s face-to-face OJT agreements by filing status. Choose a campus to compare distances for partners with mapped locations.</p>
 
           <div class="landing-filter-bar">
             <div class="filter-chip-group">
@@ -322,7 +327,7 @@
                 </select>
               </label>
               <label for="landing-filter-campus" class="filter-field">
-                Campus
+                Distance from
                 <select id="landing-filter-campus" class="landing-select">
                   <option value="alangilan">Alangilan</option>
                   <option value="pabloBorbon">Pablo Borbon</option>
@@ -331,17 +336,18 @@
                 </select>
               </label>
             </div>
+            <button type="button" class="section-link filter-reset" id="landing-filter-reset" hidden>Reset filters</button>
           </div>
 
           <a href="./index.html" class="btn btn-primary btn-lg" data-os-launch>
-            Launch Opportunity Radar &rarr;
+            Browse all partners &rarr;
           </a>
         </div>
 
         <div class="partner-table-wrap">
           <div class="table-header-bar">
             <span>Agreement summary</span>
-            <span class="num" id="table-total-slots">— records</span>
+            <span class="num" id="table-total-slots" role="status">Loading agreements…</span>
           </div>
           <table class="partner-table">
             <caption class="visually-hidden">Agreement records by filing status</caption>

@@ -33,7 +33,7 @@ const TIER_MILESTONES = [
 ];
 
 const DRAWER_META = {
-  distance: { title: "Distance & Filters", sub: "Campus origin, radius ring & engineering tracks" },
+  distance: { title: "Filters", sub: "Campus, distance, and placement details" },
   catalog: { title: "MOA Partner Catalog", sub: "Browse industry agreements and filing status" },
   ai: { title: "Partner Matcher", sub: "Search available agreement details" },
   inventory: { title: "Register & Shortlist", sub: "Filing status, saved agreements & CSV export" },
@@ -65,6 +65,8 @@ const state = {
   aiMessages: []
 };
 
+let drawerTrigger = null;
+let inspectorFromCatalog = false;
 let map = null;
 let markersLayer = null;
 let radiusLayer = null;
@@ -170,7 +172,7 @@ function hideToast() {
 
 /* Map Initialization & Rendering ----------------------------------------- */
 function initMap() {
-  if (!window.L) return Promise.resolve();
+  if (!window.L) return;
   map = L.map("opportunity-map", {
     center: [14.02, 121.05],
     zoom: 10,
@@ -180,7 +182,7 @@ function initMap() {
 
   addAtlas(map);
   markersLayer = L.layerGroup().addTo(map);
-  const baseLayer = setBasemap(state.basemap);
+  setBasemap(state.basemap);
   updateCampusMarker();
 
   map.on("click", () => {
@@ -192,12 +194,6 @@ function initMap() {
       syncHudAttributes();
     }
   });
-
-  return baseLayer
-    ? new Promise(resolve => {
-        baseLayer.once("load", resolve);
-      })
-    : Promise.resolve();
 }
 
 function setBasemap(styleKey, { persist = true } = {}) {
@@ -333,9 +329,8 @@ function computeFiltered() {
   const q = state.searchQuery.trim().toLowerCase();
 
   const list = state.companies.filter(company => {
-    const dist = companyDistanceKm(company);
-    if (state.radiusKm < 120 && dist > state.radiusKm) return false;
-    if (state.activeCategory !== "ALL" && company.moaStatus?.toUpperCase() !== state.activeCategory) return false;
+    if (state.radiusKm < 120 && companyDistanceKm(company) > state.radiusKm) return false;
+    if (state.activeCategory !== "ALL" && filingStatus(company).toUpperCase() !== state.activeCategory) return false;
     if (state.programFilter !== "all" && !(company.programs || []).includes(state.programFilter)) return false;
     if (state.acceptsFilter !== "all" && !(company.accepts || []).includes(state.acceptsFilter)) return false;
     if (state.allowanceOnly && !company.hasAllowance) return false;
@@ -348,8 +343,9 @@ function computeFiltered() {
         company.hub,
         company.address,
         company.moaRef,
-        company.moaStatus,
+        filingStatus(company),
         company.registerNumber,
+        company.registerNumber ? `#${company.registerNumber}` : "",
         ...(company.programs || []),
         ...(company.acceptedRoles || [])
       ]
@@ -376,10 +372,8 @@ function refreshWorkspace({ refreshDrawer = true } = {}) {
   computeFiltered();
   updateRadiusCircle();
 
-  const pill = document.getElementById("os-result-pill");
-  if (pill) {
-    pill.textContent = `${state.filtered.length.toLocaleString()} MOAs · ${state.filtered.filter(hasCoordinates).length} mapped`;
-  }
+  document.getElementById("os-result-count").textContent = state.filtered.length.toLocaleString();
+  document.getElementById("os-result-detail").textContent = ` MOAs · ${state.filtered.filter(hasCoordinates).length} mapped`;
 
   const clearBtn = document.getElementById("os-search-clear");
   if (clearBtn) clearBtn.hidden = state.searchQuery.length === 0;
@@ -395,18 +389,20 @@ function refreshWorkspace({ refreshDrawer = true } = {}) {
 
 /* Selection & Right Floating Inspector ----------------------------------- */
 function selectCompany(companyId, options = {}) {
-  const { pan = true, expandMobile = false, closeDrawerOnMobile = false } = options;
+  const { pan = true, expandMobile = false, closeDrawerOnMobile = false, fromCatalog = false } = options;
   const company = state.companies.find(c => c.id === companyId);
   if (!company) return;
 
   state.selectedId = company.id;
-  if (closeDrawerOnMobile && isMobileViewport()) {
+  const mobile = isMobileViewport();
+  inspectorFromCatalog = mobile && fromCatalog;
+  if (closeDrawerOnMobile && mobile) {
     closeDrawer();
   }
-  if (isMobileViewport() && expandMobile) {
+  if (mobile && expandMobile) {
     state.mobileSheet = "expanded";
     state.inspectorOpen = true;
-  } else if (!isMobileViewport()) {
+  } else if (!mobile) {
     state.inspectorOpen = true;
   }
 
@@ -420,6 +416,12 @@ function selectCompany(companyId, options = {}) {
 
   if (pan && map && hasCoordinates(company)) {
     map.flyTo([company.lat, company.lng], Math.max(map.getZoom(), 12), { duration: 0.65 });
+  }
+
+  if (inspectorFromCatalog) {
+    document.querySelector("#os-inspector-content .os-insp-title")?.focus();
+  } else if (fromCatalog) {
+    document.querySelector(`.os-mini-open[data-inspect-id="${CSS.escape(company.id)}"]`)?.focus();
   }
 }
 
@@ -438,8 +440,15 @@ function syncHudAttributes() {
     reopenBtn.hidden = !showReopen;
   }
 
+  const backToResults = document.getElementById("btn-inspector-results");
+  if (backToResults) backToResults.hidden = !inspectorFromCatalog || state.mobileSheet !== "expanded" || !isMobileViewport();
+
+  document.getElementById("os-browse-results")?.setAttribute("aria-expanded", String(state.activePanel === "catalog"));
   document.querySelectorAll(".os-nav-btn, .os-dock-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.panel === state.activePanel);
+    const active = btn.dataset.panel === state.activePanel;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-controls", "os-drawer");
+    btn.setAttribute("aria-expanded", String(active));
   });
 }
 
@@ -514,7 +523,7 @@ function renderInspector() {
       <div class="os-insp-header">
         <div class="os-monogram">${escapeHtml(company.name.slice(0, 2).toUpperCase())}</div>
         <div>
-          <h3 class="os-insp-title">${escapeHtml(company.name)}</h3>
+          <h3 class="os-insp-title" tabindex="-1">${escapeHtml(company.name)}</h3>
           <p class="os-insp-cat">${escapeHtml(filingStatus(company))}</p>
         </div>
       </div>
@@ -544,7 +553,7 @@ function renderInspector() {
         ${escapeHtml(company.name.slice(0, 2).toUpperCase())}
       </div>
       <div style="min-width:0;">
-        <h3 class="os-insp-title">${escapeHtml(company.name)}</h3>
+        <h3 class="os-insp-title" tabindex="-1">${escapeHtml(company.name)}</h3>
         <p class="os-insp-cat">${escapeHtml(company.category || company.type)}</p>
       </div>
     </div>
@@ -640,12 +649,14 @@ function renderInspector() {
 }
 
 /* Contextual Drawer Modules ---------------------------------------------- */
-function openDrawer(panelKey) {
+function openDrawer(panelKey, { trigger = null, focus = false } = {}) {
   if (state.activePanel === panelKey) {
     closeDrawer();
     return;
   }
   state.activePanel = panelKey;
+  drawerTrigger = trigger;
+  if (isMobileViewport() && state.mobileSheet === "expanded") state.mobileSheet = "peek";
 
   const drawer = document.getElementById("os-drawer");
   const titleEl = document.getElementById("os-drawer-title");
@@ -658,13 +669,27 @@ function openDrawer(panelKey) {
 
   syncHudAttributes();
   renderActiveDrawer();
+  const body = document.getElementById("os-drawer-body");
+  if (body) body.scrollTop = 0;
+  if (focus) titleEl?.focus();
 }
 
-function closeDrawer() {
+function closeDrawer({ restoreFocus = false } = {}) {
   state.activePanel = null;
   const drawer = document.getElementById("os-drawer");
   if (drawer) drawer.hidden = true;
   syncHudAttributes();
+
+  if (restoreFocus) drawerTrigger?.focus();
+  drawerTrigger = null;
+}
+
+function returnToCatalog() {
+  const id = state.selectedId;
+  inspectorFromCatalog = false;
+  const catalogNav = document.querySelector('.os-dock-btn[data-panel="catalog"]');
+  openDrawer("catalog", { trigger: catalogNav, focus: true });
+  if (id) document.querySelector(`.os-mini-open[data-inspect-id="${CSS.escape(id)}"]`)?.focus();
 }
 
 function renderActiveDrawer() {
@@ -694,70 +719,64 @@ function renderActiveDrawer() {
 
 function renderDistancePane(body) {
   const pct = Math.round(((state.radiusKm - 10) / (120 - 10)) * 100);
+  const programs = [...new Set(state.companies.flatMap(company => company.programs || []))].sort();
+  const tracks = [...new Set(state.companies.flatMap(company => company.accepts || []))].sort();
+  const hasAllowanceInfo = state.companies.some(company => typeof company.hasAllowance === "boolean");
   body.innerHTML = `
     <div>
-      <span class="os-section-label"><span>Campus Reference Node</span></span>
-      <div class="os-seg-grid" id="os-campus-pills">
+      <span class="os-section-label"><span>Measure from campus</span></span>
+      <div class="os-seg-grid" id="os-campus-pills" role="group" aria-label="Campus for distance">
         ${Object.values(CAMPUSES)
-          .map(c => `<button type="button" class="os-seg-btn ${c.id === state.campusKey ? "active" : ""}" data-campus="${escapeHtml(c.id)}">${escapeHtml(c.shortName.replace(" Campus", ""))}</button>`)
+          .map(c => `<button type="button" class="os-seg-btn ${c.id === state.campusKey ? "active" : ""}" data-campus="${escapeHtml(c.id)}" aria-pressed="${c.id === state.campusKey}">${escapeHtml(c.shortName.replace(" Campus", ""))}</button>`)
           .join("")}
       </div>
     </div>
 
     <div class="os-slider-card">
       <div class="os-slider-head">
-        <label for="os-radius-slider">Max Distance Radius</label>
+        <label for="os-radius-slider">Maximum distance</label>
         <span class="os-slider-val" id="os-radius-label">${state.radiusKm >= 120 ? "All (No Limit)" : `Within ${state.radiusKm} km`}</span>
       </div>
-      <input type="range" id="os-radius-slider" class="os-range" min="10" max="120" step="5" value="${state.radiusKm}" style="--pct:${pct}%;" />
+      <input type="range" id="os-radius-slider" class="os-range" min="10" max="120" step="5" value="${state.radiusKm}" aria-describedby="os-radius-note" style="--pct:${pct}%;" />
+      <p class="os-toggle-sub" id="os-radius-note">A distance limit only includes partners with known locations.</p>
     </div>
 
     <div>
-      <label class="os-section-label" for="os-filter-program"><span>Engineering / Computing Program</span></label>
-      <select id="os-filter-program" class="os-select">
-        <option value="all">All Programs</option>
-        <option value="CpE">CpE · Computer Engineering</option>
-        <option value="ECE">ECE · Electronics Engineering</option>
-        <option value="EE">EE · Electrical Engineering</option>
-        <option value="ME">ME · Mechanical Engineering</option>
-        <option value="IE">IE · Industrial Engineering</option>
-        <option value="CS">CS · Computer Science</option>
-        <option value="IT">IT · Information Technology</option>
-        <option value="ChE">ChE · Chemical Engineering</option>
-        <option value="CE">CE · Civil Engineering</option>
+      <label class="os-section-label" for="os-filter-program"><span>Eligible Program</span></label>
+      <select id="os-filter-program" class="os-select" ${programs.length ? "" : "disabled"}>
+        <option value="all">${programs.length ? "All programs" : "No program eligibility listed"}</option>
+        ${programs.map(program => `<option value="${escapeHtml(program)}">${escapeHtml(program)}</option>`).join("")}
       </select>
     </div>
 
     <div>
       <label class="os-section-label" for="os-filter-accepts"><span>Opportunity Track</span></label>
-      <select id="os-filter-accepts" class="os-select">
-        <option value="all">All Tracks</option>
-        <option value="OJT / Internship">OJT / Internship</option>
-        <option value="Fresh Grad Hiring">Fresh Grad Hiring</option>
-        <option value="Capstone / Industry Project">Capstone / Industry Project</option>
-        <option value="Plant Visit / Immersion">Plant Visit / Immersion</option>
+      <select id="os-filter-accepts" class="os-select" ${tracks.length > 1 ? "" : "disabled"}>
+        <option value="all">${escapeHtml(tracks.length > 1 ? "All tracks" : tracks[0] || "No tracks listed")}</option>
+        ${tracks.length > 1 ? tracks.map(track => `<option value="${escapeHtml(track)}">${escapeHtml(track)}</option>`).join("") : ""}
       </select>
     </div>
 
     <div class="os-toggle-row">
       <div>
         <div class="os-toggle-title">Paid Allowance Only</div>
-        <div class="os-toggle-sub">Filter partners providing stipend or shuttle</div>
+        <div class="os-toggle-sub">${hasAllowanceInfo ? "Filter partners providing a stipend or shuttle" : "Allowance information is unavailable."}</div>
       </div>
-      <button type="button" class="os-switch" id="os-allowance-toggle" role="switch" aria-checked="${state.allowanceOnly}" aria-label="Paid allowance only"></button>
+      <button type="button" class="os-switch" id="os-allowance-toggle" role="switch" aria-checked="${state.allowanceOnly}" aria-label="Paid allowance only" ${hasAllowanceInfo ? "" : "disabled"}></button>
     </div>
 
     <button type="button" class="os-btn-ghost" id="os-distance-reset">Reset All Filters</button>
   `;
 
-  body.querySelector("#os-filter-program").value = state.programFilter;
-  body.querySelector("#os-filter-accepts").value = state.acceptsFilter;
+  body.querySelector("#os-filter-program").value = programs.includes(state.programFilter) ? state.programFilter : "all";
+  body.querySelector("#os-filter-accepts").value = tracks.length > 1 && tracks.includes(state.acceptsFilter) ? state.acceptsFilter : "all";
 
   body.querySelectorAll("#os-campus-pills .os-seg-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       state.campusKey = btn.dataset.campus;
       updateCampusMarker();
       refreshWorkspace();
+      body.querySelector(`[data-campus="${state.campusKey}"]`)?.focus();
       const c = getCampus();
       if (map) map.flyTo([c.lat, c.lng], 11, { duration: 0.65 });
     });
@@ -774,51 +793,68 @@ function renderDistancePane(body) {
 
   body.querySelector("#os-filter-program").addEventListener("change", e => {
     state.programFilter = e.target.value;
-    refreshWorkspace();
+    refreshWorkspace({ refreshDrawer: false });
   });
 
   body.querySelector("#os-filter-accepts").addEventListener("change", e => {
     state.acceptsFilter = e.target.value;
-    refreshWorkspace();
+    refreshWorkspace({ refreshDrawer: false });
   });
 
-  body.querySelector("#os-allowance-toggle").addEventListener("click", () => {
+  body.querySelector("#os-allowance-toggle").addEventListener("click", event => {
     state.allowanceOnly = !state.allowanceOnly;
-    refreshWorkspace();
+    event.currentTarget.setAttribute("aria-checked", String(state.allowanceOnly));
+    refreshWorkspace({ refreshDrawer: false });
   });
 
-  body.querySelector("#os-distance-reset").addEventListener("click", resetFilters);
+  body.querySelector("#os-distance-reset").addEventListener("click", () => {
+    resetFilters();
+    body.querySelector("#os-distance-reset")?.focus();
+  });
 }
 
 function renderCatalogPane(body) {
   const savedSet = new Set(DatabaseService.getBookmarks());
+  const filters = [
+    state.searchQuery.trim() && `“${state.searchQuery.trim()}”`,
+    state.activeCategory !== "ALL" && document.querySelector(".os-cat-pill.active")?.textContent,
+    state.radiusKm < 120 && `Within ${state.radiusKm} km of ${getCampus().shortName}`,
+    state.programFilter !== "all" && state.programFilter,
+    state.acceptsFilter !== "all" && state.acceptsFilter,
+    state.allowanceOnly && "Paid allowance"
+  ].filter(Boolean);
   body.innerHTML = `
     <div class="os-catalog-toolbar">
       <span class="os-section-label" id="os-catalog-count" style="margin:0;">${state.filtered.length.toLocaleString()} of ${state.companies.length.toLocaleString()} agreements</span>
+      ${filters.length ? `<button type="button" class="os-btn-ghost" id="os-catalog-reset">Clear filters</button>` : ""}
     </div>
+    ${filters.length ? `<p class="os-catalog-filters">${escapeHtml(filters.join(" · "))}</p>` : ""}
 
-    <div class="os-seg-grid cols-3" id="os-sort-pills">
-      <button type="button" class="os-seg-btn ${state.sortBy === "nearest" ? "active" : ""}" data-sort="nearest">Nearest</button>
-      <button type="button" class="os-seg-btn ${state.sortBy === "register" ? "active" : ""}" data-sort="register">Register #</button>
-      <button type="button" class="os-seg-btn ${state.sortBy === "name" ? "active" : ""}" data-sort="name">A–Z</button>
+    <div class="os-seg-grid cols-3" id="os-sort-pills" role="group" aria-label="Sort agreements">
+      <button type="button" class="os-seg-btn ${state.sortBy === "nearest" ? "active" : ""}" data-sort="nearest" aria-pressed="${state.sortBy === "nearest"}">Nearest</button>
+      <button type="button" class="os-seg-btn ${state.sortBy === "register" ? "active" : ""}" data-sort="register" aria-pressed="${state.sortBy === "register"}">Register #</button>
+      <button type="button" class="os-seg-btn ${state.sortBy === "name" ? "active" : ""}" data-sort="name" aria-pressed="${state.sortBy === "name"}">A–Z</button>
     </div>
 
     <div class="os-catalog-list" id="os-catalog-list">
       ${
         state.filtered.length === 0
-          ? `<div class="os-ai-msg is-bot">No agreements match. Try another search or clear the filters.</div>`
+          ? `<div class="os-catalog-empty os-ai-msg is-bot">
+              <strong>${filters.length ? "No matching agreements" : "No agreements available"}</strong>
+              <p>${filters.length ? "Try a shorter search or clear the filters to browse the full register." : "Reload the radar or try again once the directory is available."}</p>
+            </div>`
           : state.filtered.slice(0, state.catalogLimit)
               .map(c => {
                 const saved = savedSet.has(c.id);
                 return `
-                  <article class="os-mini-card ${c.id === state.selectedId ? "selected" : ""}" data-company-id="${escapeHtml(c.id)}" tabindex="0" role="button">
+                  <article class="os-mini-card ${c.id === state.selectedId ? "selected" : ""}" data-company-id="${escapeHtml(c.id)}">
                     <div class="os-mini-top">
                       <div class="os-monogram">${escapeHtml(c.name.slice(0, 2).toUpperCase())}</div>
                       <div class="os-mini-meta">
-                        <h3>${escapeHtml(c.name)}</h3>
+                        <h3><button type="button" class="os-mini-open" data-inspect-id="${escapeHtml(c.id)}" aria-controls="os-inspector" aria-current="${c.id === state.selectedId}">${escapeHtml(c.name)}</button></h3>
                         <span>${escapeHtml(c.registerNumber ? `Register № ${c.registerNumber}` : c.hub || c.address || "MOA record")}</span>
                       </div>
-                      <button type="button" class="os-icon-btn ${saved ? "is-saved" : ""}" data-bookmark-id="${escapeHtml(c.id)}" aria-label="${saved ? "Remove bookmark" : "Bookmark partner"}" style="width:30px;height:30px;font-size:0.85rem;">
+                      <button type="button" class="os-icon-btn ${saved ? "is-saved" : ""}" data-bookmark-id="${escapeHtml(c.id)}" aria-label="Shortlist: ${escapeHtml(c.name)}" title="${saved ? "Remove from shortlist" : "Save to shortlist"}" aria-pressed="${saved}" style="width:30px;height:30px;font-size:0.85rem;">
                         ${saved ? "★" : "☆"}
                       </button>
                     </div>
@@ -837,11 +873,16 @@ function renderCatalogPane(body) {
     ${state.filtered.length > state.catalogLimit ? `<button type="button" class="os-btn-ghost" id="os-catalog-more">Show more agreements</button>` : ""}
   `;
 
+  body.querySelector("#os-catalog-reset")?.addEventListener("click", () => {
+    resetFilters();
+    document.getElementById("os-drawer-title")?.focus();
+  });
+
   body.querySelector("#os-catalog-more")?.addEventListener("click", () => {
     const firstNew = state.filtered[state.catalogLimit];
     state.catalogLimit += CATALOG_PAGE_SIZE;
     renderCatalogPane(body);
-    body.querySelector(`[data-company-id="${CSS.escape(firstNew.id)}"]`)?.focus();
+    body.querySelector(`[data-inspect-id="${CSS.escape(firstNew.id)}"]`)?.focus();
   });
 
   body.querySelectorAll("#os-sort-pills .os-seg-btn").forEach(btn => {
@@ -849,24 +890,23 @@ function renderCatalogPane(body) {
       state.sortBy = btn.dataset.sort;
       state.catalogLimit = CATALOG_PAGE_SIZE;
       refreshWorkspace();
+      body.querySelector(`[data-sort="${state.sortBy}"]`)?.focus();
     });
   });
 
   body.querySelectorAll(".os-mini-card[data-company-id]").forEach(card => {
     const id = card.dataset.companyId;
-    card.addEventListener("click", () => selectCompany(id, { pan: true, expandMobile: true, closeDrawerOnMobile: true }));
-    card.addEventListener("keydown", e => {
-      if (e.target === card && (e.key === "Enter" || e.key === " ")) {
-        e.preventDefault();
-        selectCompany(id, { pan: true, expandMobile: true, closeDrawerOnMobile: true });
-      }
+    card.addEventListener("click", () => {
+      selectCompany(id, { expandMobile: true, closeDrawerOnMobile: true, fromCatalog: true });
     });
   });
 
   body.querySelectorAll("[data-bookmark-id]").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
-      toggleBookmark(btn.dataset.bookmarkId);
+      const id = btn.dataset.bookmarkId;
+      toggleBookmark(id);
+      body.querySelector(`[data-bookmark-id="${CSS.escape(id)}"]`)?.focus();
     });
   });
 }
@@ -1348,47 +1388,14 @@ function initMobileSheetGestures() {
   });
 }
 
-function waitForActiveTiles() {
-  if (!activeTileLayers.length) return Promise.resolve();
-  return Promise.all(
-    activeTileLayers.map(layer => {
-      if (!layer || !layer._loading) return Promise.resolve();
-      return new Promise(resolve => layer.once("load", resolve));
-    })
-  );
-}
-
-async function initLaunchArrival(tilesReady, dirReady) {
+function initLaunchArrival() {
   const root = document.documentElement;
   if (!root.classList.contains("os-launch-entering")) return;
-  try {
-    sessionStorage.removeItem("ts_os_launch_morph");
-  } catch (_) {}
 
-  const windowLoaded = document.readyState === "complete"
-    ? Promise.resolve()
-    : new Promise(resolve => window.addEventListener("load", resolve, { once: true }));
-  const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-
-  const fullLoadReady = (async () => {
-    await Promise.all([windowLoaded, fontsReady, tilesReady, dirReady]);
-    await new Promise(resolve => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
-    await waitForActiveTiles();
-  })();
-
-  const maxWait = new Promise(resolve => window.setTimeout(resolve, 3500));
-  await Promise.race([fullLoadReady, maxWait]);
-  await new Promise(resolve => window.setTimeout(resolve, 160));
-
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      root.classList.remove("os-launch-entering");
-      root.classList.add("os-launch-settling");
-      window.setTimeout(() => {
-        root.classList.remove("os-launch-settling");
-      }, 2450);
-    });
-  });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    root.classList.replace("os-launch-entering", "os-launch-settling");
+    window.setTimeout(() => root.classList.remove("os-launch-settling"), 320);
+  }));
 }
 
 /* Boot & Event Bindings -------------------------------------------------- */
@@ -1398,23 +1405,33 @@ document.addEventListener("DOMContentLoaded", () => {
   state.campusKey = state.profile.campus && CAMPUSES[state.profile.campus] ? state.profile.campus : "alangilan";
   state.mobileSheet = isMobileViewport() ? "peek" : "expanded";
 
-  const tilesReady = initMap();
+  initLaunchArrival();
+  initMap();
   syncHudAttributes();
   initMobileSheetGestures();
-  const dirReady = loadDirectory();
-  initLaunchArrival(tilesReady, dirReady);
+  loadDirectory();
 
   /* Search & Category Pills */
   const searchInput = document.getElementById("os-search-input");
   searchInput?.addEventListener("input", e => {
     state.searchQuery = e.target.value;
     state.catalogLimit = CATALOG_PAGE_SIZE;
-    if (state.searchQuery.trim() && state.activePanel !== "catalog") openDrawer("catalog");
+    if (state.searchQuery.trim() && state.activePanel !== "catalog") openDrawer("catalog", { trigger: searchInput });
     refreshWorkspace();
+  });
+
+  const browseResults = document.getElementById("os-browse-results");
+  browseResults?.addEventListener("click", () => openDrawer("catalog", { trigger: browseResults, focus: true }));
+  searchInput?.addEventListener("keydown", event => {
+    if (event.key !== "Enter" || event.isComposing) return;
+    event.preventDefault();
+    if (state.activePanel !== "catalog") openDrawer("catalog", { trigger: searchInput });
+    (document.querySelector(".os-mini-open") || document.getElementById("os-drawer-title"))?.focus();
   });
 
   document.getElementById("os-search-clear")?.addEventListener("click", () => {
     state.searchQuery = "";
+    state.catalogLimit = CATALOG_PAGE_SIZE;
     if (searchInput) {
       searchInput.value = "";
       searchInput.focus();
@@ -1426,7 +1443,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => {
       state.activeCategory = btn.dataset.cat || "ALL";
       state.catalogLimit = CATALOG_PAGE_SIZE;
-      if (state.activePanel !== "catalog") openDrawer("catalog");
+      if (state.activePanel !== "catalog") openDrawer("catalog", { trigger: btn });
       syncFilingFilters();
       refreshWorkspace();
     });
@@ -1434,7 +1451,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* Left Navigation Rail & Mobile Dock */
   document.querySelectorAll(".os-nav-btn, .os-dock-btn").forEach(btn => {
-    btn.addEventListener("click", () => openDrawer(btn.dataset.panel));
+    btn.addEventListener("click", () => openDrawer(btn.dataset.panel, { trigger: btn, focus: true }));
   });
 
   document.getElementById("btn-toggle-rail")?.addEventListener("click", () => {
@@ -1442,9 +1459,10 @@ document.addEventListener("DOMContentLoaded", () => {
     syncHudAttributes();
   });
 
-  document.getElementById("btn-drawer-close")?.addEventListener("click", closeDrawer);
+  document.getElementById("btn-drawer-close")?.addEventListener("click", () => closeDrawer({ restoreFocus: true }));
 
   /* Inspector Controls */
+  document.getElementById("btn-inspector-results")?.addEventListener("click", returnToCatalog);
   document.getElementById("btn-inspector-bookmark")?.addEventListener("click", () => {
     if (state.selectedId) toggleBookmark(state.selectedId);
   });
@@ -1539,7 +1557,9 @@ document.addEventListener("DOMContentLoaded", () => {
         layersMenu.hidden = true;
         layersBtn?.setAttribute("aria-expanded", "false");
       } else if (state.activePanel) {
-        closeDrawer();
+        closeDrawer({ restoreFocus: document.getElementById("os-drawer").contains(document.activeElement) });
+      } else if (inspectorFromCatalog && state.mobileSheet === "expanded" && isMobileViewport()) {
+        returnToCatalog();
       }
     }
   });
