@@ -870,6 +870,9 @@ html, body {
 
 .os-insp-block h4 { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--os-ink-muted); margin-bottom: 6px; }
 .os-insp-block p { font-size: 0.84rem; line-height: 1.55; color: var(--os-ink-sub); }
+.os-insp-note { border-radius: var(--radius-sm); background: var(--orange-wash); padding: 10px 12px; color: var(--os-ink-sub); font-size: 0.78rem; line-height: 1.5; }
+.os-insp-links { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.os-insp-links a { margin-top: 8px; color: var(--gold); font-size: 0.82rem; }
 
 .os-insp-location { padding: 10px 12px; border-radius: var(--radius-md); background: var(--os-sub-card); border: 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .os-insp-location p { font-size: 0.79rem; color: var(--os-ink); line-height: 1.4; font-weight: 500; }
@@ -885,7 +888,7 @@ html, body {
 .os-kv-list { display: flex; flex-direction: column; gap: 6px; padding: 11px 12px; border-radius: var(--radius-md); background: var(--os-sub-card); border: 0; }
 .os-kv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 0.76rem; }
 .os-kv-row span:first-child { color: var(--os-ink-muted); flex-shrink: 0; }
-.os-kv-row span:last-child { color: var(--os-ink); font-weight: 600; text-align: right; }
+.os-kv-row span:last-child { color: var(--os-ink); font-weight: 600; text-align: right; overflow-wrap: anywhere; }
 
 .os-insp-actions { display: flex; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid var(--os-divider); background: rgba(0, 0, 0, 0.28); flex-shrink: 0; }
 .os-insp-actions .os-cta-light { flex: 1; }

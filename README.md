@@ -46,11 +46,11 @@ opportunity-board/
 
 ## How to Manage & Update the Partner Database
 
-### Bundled face-to-face OJT register
+### Bundled OJT partner directory
 
-The default directory uses all 1,171 numbered rows from `MOA Filing System for OJT 102226.xlsx - Full F2F.csv`. The register lists organization names, dates signed, validity terms, contract end dates and filing statuses. Organizations may have multiple agreement rows. The Radar keeps those records separate and displays dates and statuses as listed instead of inferring current validity or openings.
+The default directory uses all 1,171 agreement rows from `BatStateU_Alangilan_OJT_Partners_Website_Data_v3_Batch2.csv`. Batch 2 supplies the agreement references, filing and validity labels, and placement details. The import retains the previous record IDs for saved shortlists and uses matching template data for supplemental company types and the Analog Devices careers link. Multiple agreements for one organization remain separate. Openings and stipends marked for inquiry stay unspecified.
 
-The spreadsheet does not include coordinates. The two map pins for Analog Devices General Trias and Microchip Technology Calamba use their matching locations from the previous directory. The catalog includes the remaining records and offers an organization-name search in Maps when a location is unavailable. The **Atlas** basemap and satellite fallback use bundled 1:10m [Natural Earth](https://www.naturalearthdata.com/) geography.
+The Radar pins the 89 records that Batch 2 identifies as exact facilities. The 128 estimated coordinate pairs are stored separately and excluded from pins and campus distance filters. Records without an exact pin offer a Maps search using the company name and any available address. The **Atlas** basemap and satellite fallback use bundled 1:10m [Natural Earth](https://www.naturalearthdata.com/) geography.
 
 You have **three ways** to add or update partner companies:
 

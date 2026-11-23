@@ -114,7 +114,8 @@ function companyDistanceKm(company) {
 }
 
 function distanceLabel(company) {
-  return hasCoordinates(company) ? `${companyDistanceKm(company).toFixed(1)} km` : "Unmapped";
+  if (hasCoordinates(company)) return `${companyDistanceKm(company).toFixed(1)} km`;
+  return Number.isFinite(company.approximateLat) && Number.isFinite(company.approximateLng) ? "Area only" : "Unmapped";
 }
 
 function slotLabel(company) {
@@ -277,9 +278,9 @@ function renderMarkers() {
   state.filtered.filter(hasCoordinates).forEach(company => {
     const selected = company.id === state.selectedId;
     const isFull = company.slots === 0;
-    const code = company.registerNumber
+    const code = company.initials || (company.registerNumber
       ? company.name.split(/\s+/, 2).map(word => word[0]).join("").toUpperCase()
-      : sectorBadgeCode(company.type);
+      : sectorBadgeCode(company.type));
     const labelHtml = selected
       ? `<span class="os-pin-label">${escapeHtml(shortCompanyName(company.name))}</span>`
       : "";
@@ -342,6 +343,8 @@ function computeFiltered() {
         company.type,
         company.hub,
         company.address,
+        company.city,
+        company.province,
         company.moaRef,
         filingStatus(company),
         company.registerNumber,
@@ -473,11 +476,12 @@ function renderInspector() {
   }
 
   const campus = getCampus();
+  const mapped = hasCoordinates(company);
   const dist = distanceLabel(company);
   const isFull = company.slots === 0;
-  const savedSet = new Set(DatabaseService.getBookmarks());
-  const isSaved = savedSet.has(company.id);
+  const isSaved = DatabaseService.getBookmarks().includes(company.id);
   const isRegisterRecord = Boolean(company.registerNumber);
+  const initials = company.initials || company.name.slice(0, 2).toUpperCase();
 
   if (statusEl) {
     statusEl.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${escapeHtml(isRegisterRecord ? `REGISTER № ${company.registerNumber}` : company.moaRef || "MOA record")}</span>`;
@@ -495,7 +499,7 @@ function renderInspector() {
   if (peek) {
     peek.innerHTML = `
       <div class="os-peek-main">
-        <div class="os-monogram">${escapeHtml(company.name.slice(0, 2).toUpperCase())}</div>
+        <div class="os-monogram">${escapeHtml(initials)}</div>
         <div style="min-width:0;">
           <div class="os-peek-title">${escapeHtml(company.name)}</div>
           <div class="os-peek-sub">${escapeHtml(isRegisterRecord ? filingStatus(company) : `${dist} · ${slotLabel(company)}`)}</div>
@@ -518,133 +522,139 @@ function renderInspector() {
     });
   }
 
-  if (isRegisterRecord) {
-    content.innerHTML = `
-      <div class="os-insp-header">
-        <div class="os-monogram">${escapeHtml(company.name.slice(0, 2).toUpperCase())}</div>
-        <div>
-          <h3 class="os-insp-title" tabindex="-1">${escapeHtml(company.name)}</h3>
-          <p class="os-insp-cat">${escapeHtml(filingStatus(company))}</p>
-        </div>
-      </div>
-      <div class="os-kv-list">
-        <div class="os-kv-row"><span>Date signed</span><span>${escapeHtml(formatAgreementDate(company.signedOn))}</span></div>
-        <div class="os-kv-row"><span>Agreement term</span><span>${escapeHtml(company.agreementTerm || "Not listed")}</span></div>
-        <div class="os-kv-row"><span>Contract end</span><span>${escapeHtml(formatAgreementDate(company.endsOn))}</span></div>
-        <div class="os-kv-row"><span>Placement type</span><span>Face-to-face OJT</span></div>
-      </div>
-      <div class="os-insp-block">
-        <h4>Location</h4>
-        <p>${hasCoordinates(company) ? escapeHtml(`${company.address} · ${dist} from ${campus.shortName}`) : "The MOA register does not list a location for this partner."}</p>
-      </div>
-    `;
-    const locationQuery = hasCoordinates(company) ? `${company.lat},${company.lng}` : company.name;
-    actions.innerHTML = `
-      <a href="https://www.google.com/maps/search/?api=1&query=${escapeHtml(encodeURIComponent(locationQuery))}" target="_blank" rel="noopener noreferrer" class="os-btn-ghost">
-        ${hasCoordinates(company) ? "Open location in Maps" : "Search name in Maps"}
-      </a>
-    `;
-    return;
-  }
+  const area = [company.city, company.province].filter(Boolean).join(", ");
+  const location = company.address || area;
+  const distanceNote = mapped
+    ? `${dist} straight-line from ${campus.shortName}`
+    : Number.isFinite(company.alangilanDistanceKm)
+      ? `Source estimate from Alangilan: ${company.alangilanDistanceKm} km`
+      : "";
+  const locationQuery = mapped
+    ? `${company.lat},${company.lng}`
+    : [company.name, location].filter(Boolean).join(", ");
+  const locationLabel = mapped ? "Open location in Maps" : "Search in Maps";
+  const website = sanitizeUrl(company.website);
+  const careers = sanitizeUrl(company.careersWebsite);
+  const contactEmail = company.contactEmail || company.liaisonEmail;
+  const programs = company.programs || [];
+  const placementDetails = company.placementGuidance === "sector-guidance"
+    ? "The register lists sector-based suggestions. Confirm program eligibility, tracks, and requirements with the OJT office."
+    : company.placementGuidance
+      ? "Confirm program eligibility, tracks, and requirements with the OJT office before applying."
+      : "";
+  const infoRow = (label, value) => value
+    ? `<div class="os-kv-row"><span>${label}</span><span>${escapeHtml(value)}</span></div>`
+    : "";
+  const listBlock = (label, items) => items?.length
+    ? `<div class="os-insp-block">
+        <h4>${label}</h4>
+        <ul class="os-insp-list">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      </div>`
+    : "";
+  const agreement = [
+    infoRow("MOA reference", company.moaRef),
+    infoRow("Filing status", filingStatus(company)),
+    infoRow("Validity in source", company.moaValidityLabel || company.activeMoaStatus),
+    infoRow("Date signed", company.signedOn && formatAgreementDate(company.signedOn)),
+    infoRow("Agreement term", company.agreementTerm),
+    infoRow("Contract end", company.endsOn && formatAgreementDate(company.endsOn))
+  ].join("");
+  const contact = [
+    infoRow("Liaison", company.moaCoordinator),
+    infoRow("Liaison email", company.liaisonEmail),
+    infoRow("Liaison phone", company.liaisonPhone),
+    infoRow("Company email", company.contactEmail),
+    infoRow("Company phone", company.companyPhone),
+    infoRow("Office hours", company.operatingHours)
+  ].join("");
 
   content.innerHTML = `
     <div class="os-insp-header">
-      <div class="os-monogram" style="width:44px; height:44px; font-size:0.9rem;">
-        ${escapeHtml(company.name.slice(0, 2).toUpperCase())}
-      </div>
+      <div class="os-monogram">${escapeHtml(initials)}</div>
       <div style="min-width:0;">
         <h3 class="os-insp-title" tabindex="-1">${escapeHtml(company.name)}</h3>
-        <p class="os-insp-cat">${escapeHtml(company.category || company.type)}</p>
+        ${company.category || company.type ? `<p class="os-insp-cat">${escapeHtml(company.category || company.type)}</p>` : ""}
       </div>
     </div>
 
+    <section class="os-insp-block">
+      <h4>Agreement</h4>
+      <div class="os-kv-list">${agreement}</div>
+    </section>
+
     <div class="os-insp-stats">
       <div class="os-insp-stat">
-        <small>From ${escapeHtml(campus.shortName.split(" ")[0])}</small>
-        <strong class="num is-accent">${dist}</strong>
+        <small>Distance</small>
+        <strong class="num is-accent">${escapeHtml(dist)}</strong>
       </div>
       <div class="os-insp-stat">
-        <small>Open Slots</small>
-        <strong class="num ${isFull ? "is-coral" : "is-sage"}">${isFull ? "Full (0)" : company.slots ?? "Not listed"}</strong>
+        <small>Slots</small>
+        <strong class="${isFull ? "is-coral" : ""}">${company.slots == null ? "Inquire" : escapeHtml(String(company.slots))}</strong>
       </div>
       <div class="os-insp-stat">
-        <small>Work Setup</small>
+        <small>Work setup</small>
         <strong>${escapeHtml(company.workSetup || "Not listed")}</strong>
       </div>
     </div>
 
-    ${hasCoordinates(company) ? `<div class="os-insp-location">
-      <div>
-        <p>${escapeHtml(company.address)}</p>
-        <span class="os-insp-coords">${Number(company.lat).toFixed(4)}, ${Number(company.lng).toFixed(4)} · ${escapeHtml(company.hub || "Calabarzon")}</span>
-      </div>
-      <button type="button" class="os-icon-btn" id="btn-insp-fly" title="Center map on partner" aria-label="Center map on partner">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" /><circle cx="8" cy="8" r="1.6" /></svg>
-      </button>
-    </div>` : ""}
+    <section class="os-insp-block">
+      <h4>Location</h4>
+      ${location || mapped ? `<div class="os-insp-location">
+        <div>
+          <p>${escapeHtml(location || "Facility coordinates listed")}</p>
+          ${company.locationVerification ? `<span class="os-insp-coords">${escapeHtml(company.locationVerification)}</span>` : ""}
+          ${distanceNote ? `<span class="os-insp-coords">${escapeHtml(distanceNote)}</span>` : ""}
+        </div>
+        ${mapped && map ? `<button type="button" class="os-icon-btn" id="btn-insp-fly" title="Center map on partner" aria-label="Center map on partner">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" /><circle cx="8" cy="8" r="1.6" /></svg>
+        </button>` : ""}
+      </div>` : `<p>${escapeHtml(company.locationVerification || "Location not listed in the register.")}</p>`}
+    </section>
 
-    <div class="os-insp-block">
-      <h4>Company Overview</h4>
+    ${company.description ? `<section class="os-insp-block">
+      <h4>Company overview</h4>
       <p>${escapeHtml(company.description)}</p>
-    </div>
+    </section>` : ""}
 
-    <div class="os-insp-block">
-      <h4>Accepted Engineering &amp; Computing Programs</h4>
+    ${placementDetails ? `<p class="os-insp-note">${placementDetails}</p>` : ""}
+    ${programs.length ? `<section class="os-insp-block">
+      <h4>${company.placementGuidance ? "Programs listed" : "Accepted programs"}</h4>
       <div class="os-tag-wrap">
-        ${(company.programs || [])
-          .map(p => `<span class="os-prog-pill">${escapeHtml(p)}</span>`)
-          .join("")}
+        ${programs.map(program => `<span class="os-prog-pill">${escapeHtml(program)}</span>`).join("")}
       </div>
-    </div>
+    </section>` : ""}
+    ${listBlock("Internship tracks", company.acceptedRoles)}
+    ${listBlock("Application requirements", company.requirements)}
 
-    ${
-      company.acceptedRoles?.length
-        ? `<div class="os-insp-block">
-            <h4>Open Internship &amp; Training Tracks</h4>
-            <ul class="os-insp-list">
-              ${company.acceptedRoles.map(role => `<li>${escapeHtml(role)}</li>`).join("")}
-            </ul>
-          </div>`
-        : ""
-    }
+    ${company.accepts?.length || company.allowanceDesc || company.hasAllowance === true ? `<section class="os-insp-block">
+      <h4>Placement details</h4>
+      <div class="os-kv-list">
+        ${infoRow("Opportunities", company.accepts?.join(", "))}
+        ${infoRow("Stipend", company.allowanceDesc || (company.hasAllowance ? "Allowance provided" : ""))}
+      </div>
+    </section>` : ""}
 
-    ${
-      company.requirements?.length
-        ? `<div class="os-insp-block">
-            <h4>Application Requirements</h4>
-            <ul class="os-insp-list">
-              ${company.requirements.map(req => `<li>${escapeHtml(req)}</li>`).join("")}
-            </ul>
-          </div>`
-        : ""
-    }
-
-    <div class="os-kv-list">
-      <div class="os-kv-row"><span>MOA Validity</span><span>${escapeHtml(filingStatus(company))}</span></div>
-      <div class="os-kv-row"><span>Tracks</span><span>${escapeHtml((company.accepts || ["OJT / Internship"]).join(", "))}</span></div>
-      <div class="os-kv-row"><span>Stipend</span><span>${escapeHtml(company.allowanceDesc || (company.hasAllowance ? "Allowance provided" : "Not listed"))}</span></div>
-      <div class="os-kv-row"><span>Liaison</span><span>${escapeHtml(company.moaCoordinator || "Office of Industry Relations")}</span></div>
-    </div>
+    ${contact || website || careers ? `<section class="os-insp-block">
+      <h4>Contact</h4>
+      ${contact ? `<div class="os-kv-list">${contact}</div>` : ""}
+      <div class="os-insp-links">
+        ${website ? `<a href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">Company website ↗</a>` : ""}
+        ${careers ? `<a href="${escapeHtml(careers)}" target="_blank" rel="noopener noreferrer">Careers site ↗</a>` : ""}
+      </div>
+    </section>` : ""}
+    ${company.dataQualityNote ? `<section class="os-insp-block">
+      <h4>Source notes</h4>
+      <p>${escapeHtml(company.dataQualityNote)}</p>
+    </section>` : ""}
   `;
 
   content.querySelector("#btn-insp-fly")?.addEventListener("click", () => {
-    if (map) map.flyTo([company.lat, company.lng], 14, { duration: 0.7 });
+    map?.flyTo([company.lat, company.lng], 14, { duration: 0.7 });
   });
 
-  const safeWebsite = sanitizeUrl(company.website);
-  const mailHref = company.contactEmail
-    ? `mailto:${encodeURIComponent(company.contactEmail)}?subject=${encodeURIComponent(`BatStateU MOA Internship Inquiry - ${company.name}`)}`
-    : safeWebsite;
-
   actions.innerHTML = `
-    ${
-      mailHref
-        ? `<a href="${escapeHtml(mailHref)}" ${company.contactEmail ? "" : 'target="_blank" rel="noopener noreferrer"'} class="os-cta-light ${isFull ? "is-disabled" : ""}">
-            ${isFull ? "Cohort Full" : company.contactEmail ? "Inquire via Email" : "Visit Careers"}
-          </a>`
-        : `<button type="button" class="os-cta-light is-disabled" disabled>MOA Contact Pending</button>`
-    }
-    ${hasCoordinates(company) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.lat},${company.lng}`)}" target="_blank" rel="noopener noreferrer" class="os-btn-ghost">Directions</a>` : ""}
+    ${contactEmail ? `<a class="os-cta-light" href="mailto:${encodeURIComponent(contactEmail)}?subject=${encodeURIComponent(`BatStateU MOA internship inquiry - ${company.name}`)}">Email ${company.contactEmail ? "company" : "OJT office"}</a>` : ""}
+    <a href="https://www.google.com/maps/search/?api=1&query=${escapeHtml(encodeURIComponent(locationQuery))}" target="_blank" rel="noopener noreferrer" class="os-btn-ghost">${locationLabel}</a>
   `;
 }
 
@@ -742,7 +752,7 @@ function renderDistancePane(body) {
     </div>
 
     <div>
-      <label class="os-section-label" for="os-filter-program"><span>Eligible Program</span></label>
+      <label class="os-section-label" for="os-filter-program"><span>Listed Program</span></label>
       <select id="os-filter-program" class="os-select" ${programs.length ? "" : "disabled"}>
         <option value="all">${programs.length ? "All programs" : "No program eligibility listed"}</option>
         ${programs.map(program => `<option value="${escapeHtml(program)}">${escapeHtml(program)}</option>`).join("")}
@@ -936,7 +946,7 @@ function runAiMatch(query) {
 
       if (targetProgram && (c.programs || []).some(p => p.toLowerCase() === targetProgram.toLowerCase())) {
         score += 40;
-        reasons.push(`Accepts ${targetProgram}`);
+        reasons.push(c.placementGuidance ? `Lists ${targetProgram}` : `Accepts ${targetProgram}`);
       }
       if (wantsRemote && /remote/i.test(c.workSetup || "")) { score += 30; reasons.push("Remote Friendly"); }
       if (wantsHybrid && /hybrid/i.test(c.workSetup || "")) { score += 28; reasons.push("Hybrid Setup"); }
@@ -1063,9 +1073,9 @@ function renderInventoryPane(body) {
   const nearestKm = mapped.length ? Math.min(...mapped.map(companyDistanceKm)).toFixed(1) : null;
   const totalCount = Math.max(state.filtered.length, 1);
   const notarized = state.filtered.filter(c => c.moaStatus?.toUpperCase() === "NOTARIZED").length;
-  const unlisted = state.filtered.filter(c => !c.moaStatus).length;
+  const unlisted = state.filtered.filter(c => filingStatus(c) === "Status not listed").length;
   const rings = [
-    { label: "Notarized", count: notarized, r: 42, color: "var(--os-accent)" },
+    { label: "Notarized", count: notarized, r: 42, color: "var(--gold)" },
     { label: "Other filing status", count: state.filtered.length - notarized - unlisted, r: 31, color: "#ffffff" },
     { label: "Status not listed", count: unlisted, r: 20, color: "#8a8a96" }
   ].map(ring => ({ ...ring, pct: Math.round(ring.count / totalCount * 100) }));

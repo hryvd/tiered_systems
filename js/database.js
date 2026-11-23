@@ -63,13 +63,15 @@ function hasCoordinates(company) {
 }
 
 function filingStatus(company) {
-  return company.moaStatus || "Status not listed";
+  const status = company.moaStatus?.trim();
+  return status && status.toUpperCase() !== "UNSPECIFIED" ? status : "Status not listed";
 }
 
 function formatAgreementDate(value) {
-  const parts = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value || "");
-  if (!parts) return value || "Not listed";
-  const [, day, month, year] = parts;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+  const legacy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value || "");
+  if (!iso && !legacy) return value || "Not listed";
+  const [year, month, day] = iso ? iso.slice(1) : legacy.slice(1).reverse();
   const date = new Date(Date.UTC(+year, +month - 1, +day));
   if (date.getUTCMonth() !== +month - 1 || date.getUTCDate() !== +day) return value;
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(date);
@@ -78,9 +80,13 @@ function formatAgreementDate(value) {
 function downloadCompaniesCsv(companies, label, distance = () => "") {
   const fields = [
     "id", "name", "registerNumber", "signedOn", "agreementTerm", "endsOn", "moaStatus",
-    "moaRef", "workSetup", "category", "type", "hub", "address", "lat", "lng",
+    "moaRef", "activeMoaStatus", "moaValidityLabel", "initials", "workSetup", "category",
+    "type", "hub", "address", "city", "province", "lat", "lng", "approximateLat", "approximateLng",
+    "locationVerification", "alangilanDistanceKm",
     "distanceKm", "programs", "accepts", "hasAllowance", "allowanceDesc", "slots",
-    "moaCoordinator", "contactEmail"
+    "description", "acceptedRoles", "requirements", "placementGuidance", "dataQualityNote",
+    "moaCoordinator", "liaisonEmail", "liaisonPhone", "contactEmail", "companyPhone", "website",
+    "careersWebsite", "operatingHours"
   ];
   const quote = value => {
     const text = Array.isArray(value) ? value.join(";") : String(value ?? "");
@@ -162,7 +168,11 @@ function parseCSVToObjects(csvText) {
       accepts: parseList(raw.accepts),
       hasAllowance: raw.hasAllowance ? raw.hasAllowance.toLowerCase() === "true" : null,
       slots: raw.slots && Number.isFinite(Number(raw.slots)) ? Number(raw.slots) : null,
-      acceptedRoles: parseList(raw.acceptedRoles)
+      acceptedRoles: parseList(raw.acceptedRoles),
+      requirements: parseList(raw.requirements),
+      approximateLat: raw.approximateLat ? Number(raw.approximateLat) : null,
+      approximateLng: raw.approximateLng ? Number(raw.approximateLng) : null,
+      alangilanDistanceKm: raw.alangilanDistanceKm ? Number(raw.alangilanDistanceKm) : null
     };
   }).filter(company => company.name);
 }

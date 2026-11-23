@@ -43,7 +43,7 @@ function formatSourceLabel(source) {
   const labels = {
     "google-sheets": "Google Sheets",
     "cached-sheet": "Cached Sheet",
-    "json-file": "F2F MOA register"
+    "json-file": "OJT Partner Directory"
   };
   return labels[source] || "Local Store";
 }
@@ -91,7 +91,7 @@ function renderDirectoryTable() {
       c.hub,
       c.address,
       c.moaRef,
-      c.moaStatus,
+      filingStatus(c),
       c.registerNumber,
       ...(c.programs || [])
     ]
@@ -122,7 +122,7 @@ function renderDirectoryTable() {
     .map(c => {
       const isCustom = adminState.customIds.has(c.id);
       const registerEntry = Boolean(c.registerNumber);
-      const origin = isCustom ? "Custom Local" : registerEntry ? "F2F Register" : "Google Sheets";
+      const origin = isCustom ? "Custom Local" : adminState.source === "json-file" ? "OJT Directory" : "Google Sheets";
       return `
         <tr>
           <td class="admin-cell-partner" data-label="Partner">
