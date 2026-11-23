@@ -1,11 +1,11 @@
 /* ==========================================================================
    TIERED SYSTEMS · ADMINISTRATOR WORKSPACE STYLESHEET
-   Obsidian glass · Orange controls and gold highlights
+   Obsidian glass · Soft reflections
    ========================================================================== */
 
 body {
   min-height: 100dvh;
-  background: radial-gradient(ellipse at 24% 0%, rgba(200, 133, 42, 0.09), transparent 50%), var(--surface-base);
+  background: radial-gradient(ellipse at 24% 0%, rgba(208, 214, 227, 0.07), transparent 50%), var(--surface-base);
   color: #ffffff;
   font-size: var(--text-base);
   line-height: 1.55;
@@ -19,19 +19,10 @@ body {
   padding: 0 clamp(16px, 4vw, 36px);
 }
 
-/* Frosted Black Glass Cards + Edge Refraction ---------------------------- */
+/* Corner highlights ------------------------------------------------------- */
 .admin-glass {
-  background: var(--gold-sheen), rgba(14, 14, 18, 0.82);
-  box-shadow: var(--gold-glass-edge);
-  backdrop-filter: blur(22px) saturate(165%);
-  -webkit-backdrop-filter: blur(22px) saturate(165%);
-  border: 0;
-}
-
-.has-edge-warp .admin-glass,
-.has-edge-warp .admin-topbar {
-  backdrop-filter: url(#lg-edge-warp) blur(22px) saturate(165%);
-  -webkit-backdrop-filter: url(#lg-edge-warp) blur(22px) saturate(165%);
+  background: var(--glass-corners), rgba(18, 18, 22, 0.90);
+  box-shadow: var(--glass-outline);
 }
 
 /* Toast Notification ----------------------------------------------------- */
@@ -48,7 +39,7 @@ body {
   padding: 8px 14px;
   border-radius: var(--radius-pill);
   background: rgba(9, 9, 11, 0.90);
-  backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(10px);
   border: 0;
   font-size: 0.78rem;
   font-weight: 600;
@@ -75,9 +66,9 @@ body {
   top: 0;
   z-index: 60;
   padding-top: env(safe-area-inset-top);
-  background: var(--gold-sheen), rgba(9, 9, 11, 0.86);
-  backdrop-filter: blur(22px) saturate(165%);
-  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  background: var(--glass-corners), rgba(12, 12, 16, 0.85);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border-bottom: 1px solid var(--gold-edge);
 }
 
@@ -298,7 +289,7 @@ body {
 }
 .admin-seg-btn:hover { background: rgba(255, 255, 255, 0.16); }
 .admin-seg-btn:active { transform: scale(0.985); }
-.admin-seg-btn.active { background: var(--orange-fill); color: var(--gold-ink); font-weight: 700; }
+.admin-seg-btn.active { background: var(--glass-active); color: var(--glass-active-ink); box-shadow: var(--glass-outline); font-weight: 700; }
 
 .admin-toggle-row {
   display: flex;

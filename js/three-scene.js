@@ -1,4 +1,4 @@
-/** Interactive Tiered Systems emblem. Four beveled bands form an open copper globe. */
+/** Interactive Tiered Systems emblem. Four beveled bands form an open globe. */
 const container = document.getElementById("emblem-3d-canvas");
 const indicator = document.getElementById("indicator-tier-name");
 const stageLabels = [
@@ -60,24 +60,29 @@ function initEmblem(THREE) {
   camera.position.set(0, 0, 9.6);
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.0;
   renderer.domElement.setAttribute("aria-hidden", "true");
 
-  // Broad reflected studio lights keep copper readable without a remote environment map.
+  // Wide, feathered light sources soften the reflections along the bevels.
   const reflection = document.createElement("canvas");
   reflection.width = 512;
   reflection.height = 256;
   const paint = reflection.getContext("2d");
-  paint.fillStyle = "#402720";
+  paint.fillStyle = "#303237";
   paint.fillRect(0, 0, 512, 256);
-  paint.fillStyle = "#ffcd95";
-  paint.fillRect(40, 32, 132, 37);
-  paint.fillStyle = "#ffe6ca";
-  paint.fillRect(275, 63, 57, 104);
-  paint.fillStyle = "#ae6b46";
-  paint.fillRect(390, 150, 80, 45);
+  for (const [x, y, radius, color] of [
+    [100, 47, 93, "#e4dfd5"],
+    [281, 99, 72, "#d4dded"],
+    [421, 149, 94, "#a4a7af"]
+  ]) {
+    const light = paint.createRadialGradient(x, y, 0, x, y, radius);
+    light.addColorStop(0, color);
+    light.addColorStop(1, "transparent");
+    paint.fillStyle = light;
+    paint.fillRect(0, 0, 512, 256);
+  }
   const studio = new THREE.CanvasTexture(reflection);
   studio.mapping = THREE.EquirectangularReflectionMapping;
   studio.colorSpace = THREE.SRGBColorSpace;
@@ -86,21 +91,26 @@ function initEmblem(THREE) {
   pmrem.dispose();
   studio.dispose();
 
-  scene.add(new THREE.HemisphereLight(0xffca97, 0x392921, 1.05));
-  const keyLight = new THREE.DirectionalLight(0xffdbb3, 2.5);
+  scene.add(new THREE.HemisphereLight(0xe4e6ed, 0x33343b, 1.4));
+  const keyLight = new THREE.DirectionalLight(0xf1eee8, 2.0);
   keyLight.position.set(4, 7, 5);
   scene.add(keyLight);
-  const rimLight = new THREE.DirectionalLight(0xff9a49, 2.8);
+  const rimLight = new THREE.DirectionalLight(0xdce5f3, 1.1);
   rimLight.position.set(-5, -3, 1);
   scene.add(rimLight);
 
   const assembly = new THREE.Group();
   scene.add(assembly);
 
-  const copper = new THREE.MeshStandardMaterial({
+  const glass = new THREE.MeshPhysicalMaterial({
     vertexColors: true,
-    roughness: 0.32,
-    metalness: 0.68
+    roughness: 0.34,
+    metalness: 0.24,
+    transmission: 0.54,
+    ior: 1.46,
+    thickness: 0.4,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.28
   });
   const bands = [
     { radius: 2.13, width: 0.44, depth: 0.29, tilt: [Math.PI / 2, 0, 0] },
@@ -109,21 +119,18 @@ function initEmblem(THREE) {
     { radius: 1.99, width: 0.22, depth: 0.16, tilt: [0.48, 0, -0.68] }
   ];
   for (const { radius, width, depth, tilt } of bands) {
-    const band = new THREE.Mesh(beveledBand(THREE, radius, width, depth), copper);
+    const band = new THREE.Mesh(beveledBand(THREE, radius, width, depth), glass);
     band.rotation.set(...tilt, "YXZ");
     assembly.add(band);
   }
 
-  const glints = [
-    makeGlint(THREE, scene, [-1.48, -1.45, 0.21], -0.33, 1.0),
-    makeGlint(THREE, scene, [1.92, -0.82, 0.20], -0.29, 0.8)
-  ];
   const stageAngles = [
     [-0.03, -0.06],
     [0.05, 0.29],
     [-0.21, 0.20],
     [0.17, -0.31]
   ];
+  assembly.rotation.set(...stageAngles[0], 0);
 
   let active = 0;
   let targetTurn = 0;
@@ -133,13 +140,11 @@ function initEmblem(THREE) {
   let paused = false;
   let dragStart = null;
   let lastTime = 0;
-  let glintWake = 0;
   const requestRender = () => {
     if (!frame && visible && !paused) frame = requestAnimationFrame(render);
   };
 
   updateModel = index => {
-    if (active !== index) glintWake = performance.now();
     active = index;
     requestRender();
   };
@@ -148,22 +153,18 @@ function initEmblem(THREE) {
     frame = 0;
     if (!visible || paused) return;
     const reduced = motionPreference.matches;
-    const settle = reduced ? 1 : 1 - Math.exp(-Math.min(now - lastTime, 50) / 170);
-    lastTime = now;
     const [stageTilt, stageTurn] = stageAngles[active];
-    const idle = reduced ? 0 : Math.sin(now / 2650) * 0.035;
-    assembly.rotation.x += (stageTilt + (reduced ? 0 : targetTilt) - assembly.rotation.x) * settle;
-    assembly.rotation.y += (stageTurn + (reduced ? 0 : targetTurn) + idle - assembly.rotation.y) * settle;
-    assembly.updateMatrixWorld();
-    const wake = reduced || glintWake === 0 ? 0 : Math.exp(-Math.max(0, now - glintWake) / 380);
-    for (const { flare, anchor, brightness } of glints) {
-      flare.position.copy(anchor).applyMatrix4(assembly.matrixWorld);
-      flare.position.z += 0.026;
-      flare.scale.x = 1 + wake * 0.36;
-      flare.material.uniforms.strength.value = brightness * (0.78 + wake * 0.45);
-    }
+    const tiltDelta = stageTilt + (reduced ? 0 : targetTilt) - assembly.rotation.x;
+    const turnDelta = stageTurn + (reduced ? 0 : targetTurn) - assembly.rotation.y;
+    const animating = !reduced && Math.max(Math.abs(tiltDelta), Math.abs(turnDelta)) > 0.001;
+    const elapsed = lastTime ? now - lastTime : 1000 / 60;
+    const settle = animating ? 1 - Math.exp(-elapsed / 145) : 1;
+    lastTime = animating ? now : 0;
+    assembly.rotation.x += tiltDelta * settle;
+    assembly.rotation.y += turnDelta * settle;
     renderer.render(scene, camera);
-    if (!reduced) requestRender();
+    if (!container.classList.contains("has-model")) container.classList.add("has-model");
+    if (animating) requestRender();
   }
 
   const resize = () => {
@@ -178,27 +179,28 @@ function initEmblem(THREE) {
   };
 
   container.addEventListener("pointerdown", event => {
+    if (motionPreference.matches) return;
     dragStart = event.clientX;
     container.setPointerCapture(event.pointerId);
   });
   container.addEventListener("pointermove", event => {
     if (motionPreference.matches) return;
     if (dragStart !== null) {
-      targetTurn = THREE.MathUtils.clamp((event.clientX - dragStart) / 225, -0.64, 0.64);
+      targetTurn = THREE.MathUtils.clamp((event.clientX - dragStart) / 250, -0.52, 0.52);
+      requestRender();
       return;
     }
     if (event.pointerType !== "mouse") return;
     const box = container.getBoundingClientRect();
-    targetTurn = ((event.clientX - box.left) / box.width - 0.5) * 0.26;
-    targetTilt = ((event.clientY - box.top) / box.height - 0.5) * 0.16;
-  });
-  container.addEventListener("pointerenter", () => {
-    glintWake = performance.now();
+    targetTurn = ((event.clientX - box.left) / box.width - 0.5) * 0.21;
+    targetTilt = ((event.clientY - box.top) / box.height - 0.5) * 0.13;
+    requestRender();
   });
   const resetMotion = () => {
     dragStart = null;
     targetTurn = 0;
     targetTilt = 0;
+    requestRender();
   };
   container.addEventListener("lostpointercapture", resetMotion);
   container.addEventListener("pointerleave", resetMotion);
@@ -211,7 +213,6 @@ function initEmblem(THREE) {
   renderer.domElement.addEventListener("webglcontextrestored", () => {
     paused = false;
     requestRender();
-    container.classList.add("has-model");
   });
 
   new ResizeObserver(resize).observe(container);
@@ -223,7 +224,6 @@ function initEmblem(THREE) {
 
   container.appendChild(renderer.domElement);
   resize();
-  container.classList.add("has-model");
 }
 
 function beveledBand(THREE, radius, width, depth) {
@@ -232,15 +232,15 @@ function beveledBand(THREE, radius, width, depth) {
   const bevel = 0.036;
   const flank = Math.sqrt(radius * radius - half * half);
   const section = [
-    [flank - depth, -half + bevel, 0x663822],
-    [flank - depth + bevel, -half, 0x9c5a32],
-    [flank - bevel, -half, 0xe2a76d],
-    [flank, -half + bevel, 0xffcc91],
-    [radius, 0, 0xaa572b],
-    [flank, half - bevel, 0xffcc91],
-    [flank - bevel, half, 0xe2a76d],
-    [flank - depth + bevel, half, 0x9c5a32],
-    [flank - depth, half - bevel, 0x663822]
+    [flank - depth, -half + bevel, 0x45474f],
+    [flank - depth + bevel, -half, 0x64646c],
+    [flank - bevel, -half, 0xaaa8a0],
+    [flank, -half + bevel, 0xc6c2b8],
+    [radius, 0, 0x757882],
+    [flank, half - bevel, 0xc6c2b8],
+    [flank - bevel, half, 0xaaa8a0],
+    [flank - depth + bevel, half, 0x64646c],
+    [flank - depth, half - bevel, 0x45474f]
   ];
   section.push(section[0]);
   const geometry = new THREE.LatheGeometry(section.map(([x, y]) => new THREE.Vector2(x, y)), 144);
@@ -251,47 +251,4 @@ function beveledBand(THREE, radius, width, depth) {
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   return geometry;
-}
-
-function makeGlint(THREE, scene, point, angle, brightness) {
-  // A tight white reflection, wider amber bloom and directional lens streak share one plane.
-  const flare = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.1, 0.9),
-    new THREE.ShaderMaterial({
-      transparent: true,
-      blending: THREE.CustomBlending,
-      blendSrc: THREE.SrcAlphaFactor,
-      blendDst: THREE.OneFactor,
-      blendSrcAlpha: THREE.OneFactor,
-      blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
-      depthTest: false,
-      depthWrite: false,
-      uniforms: { strength: { value: brightness } },
-      vertexShader: `
-        varying vec2 lens;
-        void main() {
-          lens = uv * 2.0 - 1.0;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        varying vec2 lens;
-        uniform float strength;
-        void main() {
-          vec2 core = lens * vec2(21.0, 7.0);
-          vec2 bloom = lens * vec2(5.5, 2.5);
-          vec2 smear = lens * vec2(2.35, 16.0);
-          float peak = exp(-dot(core, core));
-          float halo = exp(-dot(bloom, bloom));
-          float streak = exp(-dot(smear, smear));
-          vec3 light = mix(vec3(1.0, 0.42, 0.13), vec3(1.0, 0.98, 0.85), peak);
-          float edge = 1.0 - smoothstep(0.73, 1.0, max(abs(lens.x), abs(lens.y)));
-          gl_FragColor = vec4(light, min(1.0, strength * (peak + 0.21 * halo + 0.38 * streak)) * edge);
-        }
-      `
-    })
-  );
-  flare.rotation.z = angle;
-  scene.add(flare);
-  return { flare, anchor: new THREE.Vector3(...point), brightness };
 }

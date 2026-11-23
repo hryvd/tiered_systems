@@ -3,7 +3,6 @@
  * Manages Opportunity Radar defaults (basemap, radius ring), live Google Sheets CSV sync,
  * and local custom MOA partner entries with no login gate.
  */
-import "./glass-warp.js";
 import "./os-transition.js";
 import { DatabaseService, downloadCompaniesCsv, filingStatus, formatAgreementDate, hasCoordinates } from "./database.js";
 

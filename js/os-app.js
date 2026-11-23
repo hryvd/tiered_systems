@@ -2,7 +2,6 @@
  * TIERED SYSTEMS · Opportunity Radar Controller
  * Full-bleed satellite map + translucent black glass HUD + Vinora analytics + AI Matcher
  */
-import "./glass-warp.js";
 import { addAtlas } from "./atlas.js";
 import { CAMPUSES, DatabaseService, downloadCompaniesCsv, filingStatus, formatAgreementDate, hasCoordinates, STORAGE_KEYS } from "./database.js";
 
@@ -73,6 +72,7 @@ let radiusLayer = null;
 let campusMarker = null;
 let activeTileLayers = [];
 const markersById = new Map();
+let activeMarkerId = null;
 
 /* Helpers ---------------------------------------------------------------- */
 function isMobileViewport() {
@@ -186,6 +186,18 @@ function initMap() {
   setBasemap(state.basemap);
   updateCampusMarker();
 
+  const mapElement = map.getContainer();
+  mapElement.addEventListener("keydown", event => {
+    const marker = markersById.get(event.target.dataset.mapCompany)?.marker;
+    if (!marker || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    if (!event.repeat) marker.fire("click");
+  });
+  mapElement.addEventListener("focusin", event => {
+    const marker = markersById.get(event.target.dataset.mapCompany)?.marker;
+    if (marker && event.target.matches(":focus-visible")) keepMapPinInView(marker.getLatLng());
+  });
+
   map.on("click", () => {
     if (!isMobileViewport()) return;
     if (state.activePanel) {
@@ -270,41 +282,94 @@ function updateRadiusCircle() {
   }).addTo(map);
 }
 
+function updateMarkerDetails(marker, company) {
+  const element = marker.getElement();
+  const code = company.initials || (company.registerNumber
+    ? company.name.split(/\s+/, 2).map(word => word[0]).join("").toUpperCase()
+    : sectorBadgeCode(company.type));
+  element.title = company.name;
+  element.setAttribute("aria-label", `Inspect ${company.name}`);
+  element.querySelector(".os-pin-wrap").classList.toggle("is-full", company.slots === 0);
+  element.querySelector(".os-pin-orb").textContent = code;
+  element.querySelector(".os-pin-label").textContent = shortCompanyName(company.name);
+}
+
+function addCompanyMarker(company) {
+  const icon = L.divIcon({
+    className: "os-partner-pin",
+    html: '<div class="os-pin-wrap" aria-hidden="true"><span class="os-pin-label" hidden></span><div class="os-pin-orb"></div></div>',
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+  });
+  const marker = L.marker([company.lat, company.lng], { icon, autoPanOnFocus: false });
+  const id = company.id;
+  marker.on("click", () => {
+    selectCompany(id, { expandMobile: true, closeDrawerOnMobile: true, fromMarker: true });
+  });
+  markersLayer.addLayer(marker);
+  const element = marker.getElement();
+  element.dataset.mapCompany = id;
+  element.setAttribute("aria-controls", "os-inspector");
+  element.setAttribute("aria-pressed", "false");
+  updateMarkerDetails(marker, company);
+  return marker;
+}
+
+function highlightMarker(id) {
+  const nextId = markersById.has(id) ? id : null;
+  if (activeMarkerId === nextId) return;
+  for (const markerId of [activeMarkerId, nextId]) {
+    const marker = markersById.get(markerId)?.marker;
+    if (!marker) continue;
+    const selected = markerId === nextId;
+    const element = marker.getElement();
+    element.setAttribute("aria-pressed", String(selected));
+    element.querySelector(".os-pin-wrap").classList.toggle("is-selected", selected);
+    element.querySelector(".os-pin-label").hidden = !selected;
+    marker.setZIndexOffset(selected ? 900 : 0);
+  }
+  activeMarkerId = nextId;
+}
+
 function renderMarkers() {
   if (!markersLayer) return;
-  markersLayer.clearLayers();
-  markersById.clear();
+  const visibleIds = new Set();
+  for (const company of state.filtered) {
+    if (!hasCoordinates(company)) continue;
+    const { id, lat, lng } = company;
+    visibleIds.add(id);
+    const entry = markersById.get(id);
+    if (!entry) {
+      markersById.set(id, { marker: addCompanyMarker(company), company });
+    } else if (entry.company !== company) {
+      if (entry.company.lat !== lat || entry.company.lng !== lng) entry.marker.setLatLng([lat, lng]);
+      updateMarkerDetails(entry.marker, company);
+      entry.company = company;
+    }
+  }
+  for (const [id, { marker }] of markersById) {
+    if (visibleIds.has(id)) continue;
+    markersLayer.removeLayer(marker);
+    markersById.delete(id);
+  }
 
-  state.filtered.filter(hasCoordinates).forEach(company => {
-    const selected = company.id === state.selectedId;
-    const isFull = company.slots === 0;
-    const code = company.initials || (company.registerNumber
-      ? company.name.split(/\s+/, 2).map(word => word[0]).join("").toUpperCase()
-      : sectorBadgeCode(company.type));
-    const labelHtml = selected
-      ? `<span class="os-pin-label">${escapeHtml(shortCompanyName(company.name))}</span>`
-      : "";
+  if (activeMarkerId && (activeMarkerId !== state.selectedId || !visibleIds.has(activeMarkerId))) highlightMarker(null);
+}
 
-    const icon = L.divIcon({
-      className: "",
-      html: `<div class="os-pin-wrap ${selected ? "is-selected" : ""} ${isFull ? "is-full" : ""}">${labelHtml}<div class="os-pin-orb">${escapeHtml(code)}</div></div>`,
-      iconSize: [38, 38],
-      iconAnchor: [19, 19]
-    });
+function mapPanOptions() {
+  return { animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches, duration: 0.22 };
+}
 
-    const marker = L.marker([company.lat, company.lng], {
-      icon,
-      title: company.name,
-      zIndexOffset: selected ? 900 : 0
-    });
-
-    marker.on("click", () => {
-      selectCompany(company.id, { pan: true, expandMobile: true });
-    });
-
-    markersLayer.addLayer(marker);
-    markersById.set(company.id, marker);
-  });
+function keepMapPinInView(latLng) {
+  const size = map.getSize();
+  const mobile = isMobileViewport();
+  const inspector = document.getElementById("os-inspector").getBoundingClientRect();
+  const railWidth = document.getElementById("os-nav-rail").offsetWidth;
+  const headerBottom = document.querySelector(".os-top-cluster").getBoundingClientRect().bottom;
+  const paddingTopLeft = [mobile ? 24 : railWidth + 24, headerBottom + 32];
+  const paddingBottomRight = [mobile ? 24 : inspector.width + 24, mobile && inspector.height ? size.y - inspector.top + 24 : 72];
+  if (paddingTopLeft[0] + paddingBottomRight[0] >= size.x || paddingTopLeft[1] + paddingBottomRight[1] >= size.y) return;
+  map.panInside(latLng, { paddingTopLeft, paddingBottomRight, ...mapPanOptions() });
 }
 
 function fitAllPins() {
@@ -392,10 +457,11 @@ function refreshWorkspace({ refreshDrawer = true } = {}) {
 
 /* Selection & Right Floating Inspector ----------------------------------- */
 function selectCompany(companyId, options = {}) {
-  const { pan = true, expandMobile = false, closeDrawerOnMobile = false, fromCatalog = false } = options;
+  const { pan = true, expandMobile = false, closeDrawerOnMobile = false, fromCatalog = false, fromMarker = false } = options;
   const company = state.companies.find(c => c.id === companyId);
   if (!company) return;
 
+  const previousId = state.selectedId;
   state.selectedId = company.id;
   const mobile = isMobileViewport();
   inspectorFromCatalog = mobile && fromCatalog;
@@ -410,15 +476,24 @@ function selectCompany(companyId, options = {}) {
   }
 
   syncHudAttributes();
-  renderMarkers();
-  renderInspector();
-
-  if (state.activePanel === "catalog" || state.activePanel === "inventory") {
-    renderActiveDrawer();
+  highlightMarker(company.id);
+  if (previousId !== company.id) {
+    renderInspector();
+    if (state.activePanel === "catalog") {
+      for (const id of [previousId, company.id]) {
+        if (!id) continue;
+        const button = document.querySelector(`.os-mini-open[data-inspect-id="${CSS.escape(id)}"]`);
+        const selected = id === company.id;
+        button?.setAttribute("aria-current", String(selected));
+        button?.closest(".os-mini-card").classList.toggle("selected", selected);
+      }
+    }
   }
 
   if (pan && map && hasCoordinates(company)) {
-    map.flyTo([company.lat, company.lng], Math.max(map.getZoom(), 12), { duration: 0.65 });
+    const latLng = [company.lat, company.lng];
+    if (fromMarker || mobile) keepMapPinInView(latLng);
+    else map.panTo(latLng, mapPanOptions());
   }
 
   if (inspectorFromCatalog) {

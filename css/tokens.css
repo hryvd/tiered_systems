@@ -1,6 +1,6 @@
 /* ==========================================================================
    TIERED SYSTEMS · SHARED DESIGN TOKENS & BASE PRIMITIVES
-   Obsidian glass · Burnt orange and gold highlights
+   Obsidian glass · Soft corner reflections and muted accents
    ========================================================================== */
 
 :root {
@@ -19,7 +19,13 @@
   --glass-bg: rgba(16, 16, 20, 0.44);
   --glass-bg-dense: rgba(14, 14, 18, 0.72);
   --glass-pill: rgba(20, 20, 24, 0.48);
-  --glass-blur: 22px;
+  --glass-blur: 14px;
+  --glass-corners:
+    radial-gradient(ellipse 138px 64px at top left, rgba(245, 241, 231, 0.16), transparent 100%),
+    radial-gradient(ellipse 100px 56px at bottom right, rgba(160, 181, 201, 0.12), transparent 100%);
+  --glass-outline: inset 0 0 0 1px rgba(226, 231, 239, 0.12), inset 0 1px 0 rgba(246, 245, 240, 0.12);
+  --glass-active: linear-gradient(125deg, rgba(236, 231, 222, 0.19), rgba(177, 188, 207, 0.10));
+  --glass-active-ink: #f4f2ee;
 
   /* Ink Hierarchy */
   --ink-primary: #f7f7f8;
@@ -32,20 +38,17 @@
   --accent-hover: #f2681d;
   --accent-subtle: rgba(232, 89, 12, 0.15);
 
-  --orange-ink: #ffa764;
-  --orange-fill: linear-gradient(115deg, #e86a22, #ffab60 56%, #f37a36);
-  --orange-edge: rgba(248, 139, 73, 0.34);
-  --orange-wash: rgba(232, 89, 12, 0.14);
+  --orange-ink: #dac1b2;
+  --orange-edge: rgba(212, 158, 129, 0.22);
+  --orange-wash: rgba(173, 112, 83, 0.11);
 
-  --gold: #edba65;
-  --gold-pale: #ffe7aa;
-  --gold-deep: #b8741d;
+  --gold: #d1c7b4;
+  --gold-pale: #eee6d7;
+  --gold-deep: #a79687;
   --gold-ink: #23170c;
-  --gold-fill: linear-gradient(115deg, #e5ad55, var(--gold-pale) 47%, #e4a448);
-  --gold-edge: rgba(240, 190, 110, 0.25);
-  --gold-sheen: linear-gradient(128deg, rgba(246, 188, 91, 0.115), rgba(239, 180, 78, 0.025) 46%, transparent 70%);
-  --gold-glass-edge: inset 0 1px 0 var(--gold-edge), inset 0 -1px 0 rgba(239, 183, 86, 0.08);
-  --gold-launch: linear-gradient(90deg, var(--accent), var(--gold-pale) 50%, var(--gold-deep));
+  --gold-fill: linear-gradient(115deg, #bfb9b0, var(--gold-pale) 48%, #beb4a7);
+  --gold-edge: rgba(227, 213, 191, 0.19);
+  --gold-launch: linear-gradient(90deg, var(--gold-deep), var(--gold-pale) 50%, #a7b0bb);
 
   --cta-bg: #f7f7f8;
   --cta-hover: #e0e0e5;
@@ -197,7 +200,7 @@ button, input, select, a {
     transform 340ms var(--ease-spring);
 }
 .os-launch-pill.is-expanding .os-launch-halo {
-  opacity: 0.95;
+  opacity: 0.46;
   transform: scale(1.03);
 }
 
@@ -249,7 +252,7 @@ button, input, select, a {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--orange-fill);
+  background: var(--gold-fill);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -289,7 +292,7 @@ button, input, select, a {
   transition: opacity 240ms ease-out 70ms;
 }
 .os-launch-pill.is-expanding .os-launch-flash {
-  opacity: 0.92;
+  opacity: 0.54;
 }
 
 @media (max-width: 768px) {
