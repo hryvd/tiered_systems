@@ -393,7 +393,7 @@ html, body {
 }
 .os-cat-pill:hover { background: var(--glass-corners), var(--os-glass-dense); transform: translateY(-1px); }
 .os-cat-pill:active { transform: scale(0.985); }
-.os-cat-pill.active { background: var(--glass-active); color: var(--glass-active-ink); box-shadow: var(--glass-outline); }
+.os-cat-pill.active { background: var(--glass-corners), var(--glass-active); color: var(--amber-ink); box-shadow: var(--glass-outline); }
 
 /* Left Floating Navigation Rail ------------------------------------------ */
 .os-nav-rail {
@@ -787,7 +787,7 @@ html, body {
 /* Profile 4-Tier Readiness Card ------------------------------------------ */
 .os-readiness-card { padding: 14px; border-radius: var(--radius-md); background: var(--os-sub-card); border: 0; }
 .os-progress-track { height: 6px; border-radius: var(--radius-pill); background: var(--os-control-hover); overflow: hidden; margin: 10px 0 12px; }
-.os-progress-fill { height: 100%; border-radius: var(--radius-pill); background: var(--gold-fill); transition: width 240ms var(--ease-spring); }
+.os-progress-fill { height: 100%; border-radius: var(--radius-pill); background: var(--amber-reflection); transition: width 240ms var(--ease-spring); }
 
 .os-tier-check {
   width: 100%;

@@ -21,8 +21,8 @@
   --glass-pill: rgba(20, 20, 24, 0.48);
   --glass-blur: 14px;
   --glass-corners:
-    radial-gradient(ellipse 138px 64px at top left, rgba(245, 241, 231, 0.16), transparent 100%),
-    radial-gradient(ellipse 100px 56px at bottom right, rgba(160, 181, 201, 0.12), transparent 100%);
+    radial-gradient(ellipse 138px 64px at top left, rgba(249, 216, 146, 0.17), transparent 100%),
+    radial-gradient(ellipse 110px 58px at bottom right, rgba(220, 134, 84, 0.14), transparent 100%);
   --glass-outline: inset 0 0 0 1px rgba(226, 231, 239, 0.12), inset 0 1px 0 rgba(246, 245, 240, 0.12);
   --glass-active: linear-gradient(125deg, rgba(236, 231, 222, 0.19), rgba(177, 188, 207, 0.10));
   --glass-active-ink: #f4f2ee;
@@ -38,15 +38,18 @@
   --accent-hover: #f2681d;
   --accent-subtle: rgba(232, 89, 12, 0.15);
 
-  --orange-ink: #dac1b2;
+  --amber-ink: #f2d594;
+  --copper-ink: #efb28a;
+  --amber-reflection: linear-gradient(100deg, #d98958, #f2d594 52%, #cf9567);
+  --orange-ink: var(--copper-ink);
   --orange-edge: rgba(212, 158, 129, 0.22);
   --orange-wash: rgba(173, 112, 83, 0.11);
 
-  --gold: #d1c7b4;
-  --gold-pale: #eee6d7;
+  --gold: #e2cfa7;
+  --gold-pale: #f1e2bd;
   --gold-deep: #a79687;
   --gold-ink: #23170c;
-  --gold-fill: linear-gradient(115deg, #bfb9b0, var(--gold-pale) 48%, #beb4a7);
+  --gold-fill: linear-gradient(115deg, #c7b79c, var(--gold-pale) 48%, #c7af8e);
   --gold-edge: rgba(227, 213, 191, 0.19);
   --gold-launch: linear-gradient(90deg, var(--gold-deep), var(--gold-pale) 50%, #a7b0bb);
 

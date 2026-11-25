@@ -289,7 +289,7 @@ body {
 }
 .admin-seg-btn:hover { background: rgba(255, 255, 255, 0.16); }
 .admin-seg-btn:active { transform: scale(0.985); }
-.admin-seg-btn.active { background: var(--glass-active); color: var(--glass-active-ink); box-shadow: var(--glass-outline); font-weight: 700; }
+.admin-seg-btn.active { background: var(--glass-corners), var(--glass-active); color: var(--amber-ink); box-shadow: var(--glass-outline); font-weight: 700; }
 
 .admin-toggle-row {
   display: flex;
